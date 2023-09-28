@@ -25,10 +25,11 @@ X0 = [0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0]; % Drone Hover
 
 %% Run simulation
 % Solve ODE
-% [T_nl,X_nl] = ode45('NonlinearizedDrone',[t0, t1], X0)
+NonlinearizedDroneFunction = @(Tn, Xn) NonlinearizedDrone(Tn, Xn, tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
+[T_nl,X_nl] = ode45(NonlinearizedDroneFunction,[t0, t1], X0)
 
 % Solve ODE
-LinearizedDroneFunction = @(T, X) LinearizedDrone(T, X, A, B);
+LinearizedDroneFunction = @(Tl, Xl) LinearizedDrone(Tl, Xl, A, B);
 [T_l,X_l] = ode45(LinearizedDroneFunction,[t0, t1], X0)
 
 %% Plot results
