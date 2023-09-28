@@ -8,7 +8,7 @@ function X_dot = NonlinearizedDrone(T, X, tk1, tk2, tk3, td1, td2, td3, rk1, rk2
     syms w1 w2 w3 w4
 
     % Write the state equation
-    U = [800, 800, 800, 800]';
+    U = [200, 200, 250, 250]';
 
     % Substitute the inputs and associate the state vector
     X_dot(1) = double(subs(tk1, [x; y; z; u; v; w; phi; theta; psy; p; q; r; w1; w2; w3; w4], [X(1); X(2); X(3); X(4); X(5); X(6); X(7); X(8); X(9); X(10); X(11); X(12); U(1); U(2); U(3); U(4)]));
