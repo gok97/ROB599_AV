@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function animate(positions,angles,l)
+function Animate(positions,angles,l)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 axle_x = [-l/2 0 0;
            l/2 0 0];
