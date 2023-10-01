@@ -57,11 +57,13 @@ for ii=1:mm
     axis(1.2*[-dmax dmax -dmax dmax -dmax dmax]);
     xlabel('x'); ylabel('y'); zlabel('z');
     %view(0,90)
-    view(3)
+    %view(3)
     pause(0.01)
     if (ii~=mm)
         clf
     end
+end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,3 +82,4 @@ R_z = [cos(psi) -sin(psi)  0; ...
        sin(psi)  cos(psi)  0; ...
        0           0       1];  
 R = R_z*R_y*R_x;
+end

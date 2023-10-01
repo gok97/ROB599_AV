@@ -19,7 +19,7 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
     td2_sym = p*w - r*u + ((-m*g*sin(phi)*cos(theta)) - (ka*Ay*((ydot_w-v)^2)))/m;
     td3_sym = q*u - p*v + ((-m*g*cos(phi)*cos(theta)) + (kf*(w1^2 + w2^2 + w3^2 + w4^2)) - (ka*Az*((zdot_w-w)^2)))/m;
     
-    rk1_sym = p + q*sin(phi)*tan(theta) + r*cos(psy)*tan(theta);
+    rk1_sym = p + q*sin(phi)*tan(theta) + r*cos(phi)*tan(theta);
     rk2_sym = q*cos(phi) - r*sin(phi);
     rk3_sym = q*sin(phi)*sec(theta) + r*cos(phi)*sec(theta);
     
