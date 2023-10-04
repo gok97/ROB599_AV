@@ -20,8 +20,8 @@ t0 = 0;
 t1 = 4;
 dt = 0.01;
 % X0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; % Hover
-X0 = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]; % Pure Ascent
-% X0 = [0, 0, 0, 2, 0, 0.0078, 0, 0.0039, 0, 0, 0, 0]; % Planar Flight
+% X0 = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]; % Pure Ascent
+X0 = [0, 0, 0, 2, 0, 0.0078, 0, 0.0039, 0, 0, 0, 0]; % Planar Flight
 
 % Compute the required thrust
 u_hover = sqrt(K(17)*K(18)/(4*K(14)))
@@ -79,7 +79,7 @@ LinearizedDroneFunction = @(Tl, Xl) LinearizedDrone(Tl, Xl, A, B);
 % counter_controllable = 0;
 % 
 % for i = 1:12
-%     current_rank = rank(double([(A-(Abar(i,i)*eye(12))), B]));
+%     current_rank = rank(double([(A-(Abar(i,i)*eye(12))), B]), 1e-6);
 %     if current_rank == 12
 %         disp("Controllable Eigenvalue:");
 %         disp(Abar(i, i));
@@ -136,6 +136,12 @@ if plot_bool == 1
                     0,              0,              0,              0,              0,              0;
                     1,              1,              1,              1,              1,              1               ];   
     
+
+    writerObj = VideoWriter('straight_video.avi', 'Motion JPEG AVI');
+    writerObj.Quality = 90;
+    writerObj.FrameRate = 100; % Adjust the frame rate as needed
+    open(writerObj);
+
     for i = 1:length(T_nl)
         % Compute values for the NL model
         % Compute and apply the rotation transformation
@@ -192,9 +198,20 @@ if plot_bool == 1
                 ylim([min(avg_y) - delta/2 - 10, max(avg_y) + delta/2 + 10])
                 zlim([min(avg_z) - delta/2 - 10, max(avg_z) + delta/2 + 10])
         end
-    
+        
+
+        % Capture the current frame
+        frame = getframe(animation_fig);
+        
+        % Write the frame to the video
+        writeVideo(writerObj, frame);
+
         % Fix framerate to match rate of sampling and update plot
         pause(dt);
         drawnow;
     end
+
+    % Save the video
+    close(writerObj);
+
 end
