@@ -2,7 +2,7 @@
 function X_dot = LinearizedDrone(T, X, A, B)
 
     % Define the control input at time T
-    U = [64.7556, -93.52, 64.7556, -93.52]';
+    U = [0.4947, 0.4947, 0.4947, 0.4947]';
 
     % Write the state equation
     A = double(A);

@@ -17,18 +17,15 @@ XU0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 225, 225, 225, 225]'; % BASIC CASE: H
 
 % Define the initial conditionss
 t0 = 0;
-t1 = 1;
+t1 = 4;
 dt = 0.01;
 % X0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; % Hover
-X0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1]; % Pure Yaw
-% X0 = [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0]; % Pure Ascent
+X0 = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]; % Pure Ascent
 % X0 = [0, 0, 0, 2, 0, 0.0078, 0, 0.0039, 0, 0, 0, 0]; % Planar Flight
 
 % Compute the required thrust
 u_hover = sqrt(K(17)*K(18)/(4*K(14)))
-u_yaw_M = sqrt(((K(9)*0.5/K(15))+(2*(u_hover^2)))/2)
-u_yaw_m = sqrt((2*(u_hover^2))-u_yaw_M^2)
-u_ascent = sqrt((K(17)*K(18)+(K(16)*K(6)*(2^2)))/(4*K(14)))
+u_ascent = sqrt((K(17)*K(18)+(K(16)*K(6)*(1^2)))/(4*K(14)))
 
 syms us_straight ws_straight theta_straight u_straight
 eqA = 4*K(14)*u_straight^2 == K(18)*K(17)*cos(theta_straight) + K(16)*K(6)*ws_straight^2;
@@ -110,10 +107,9 @@ if plot_bool == 1
         plot(T_nl, X_nl(:, i));
         hold on;
         plot(T_l, X_l(:, i));
-        if i == 3 || i == 6
-            ylim([-1,1])
-        elseif i == 4
-            ylim([1,3])
+        if  i == 6
+            ylim([0,2])
+
         end
         % Add titles or labels as needed
         xlabel('Time (s)');

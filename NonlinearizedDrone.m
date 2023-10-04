@@ -3,7 +3,7 @@ function X_dot = NonlinearizedDrone(T, X, tk1, tk2, tk3, td1, td2, td3, rk1, rk2
 
     % Define the inputs
     syms w1 w2 w3 w4
-    U = [225, 225, 225, 225]';
+    U = [225.4947, 225.4947, 225.4947, 225.4947]';
     
     % Substitute the inputs
     X_dot(1) = tk1(X(1), X(2), X(3), X(4), X(5), X(6), X(7), X(8), X(9), X(10), X(11), X(12), U(1), U(2), U(3), U(4));
