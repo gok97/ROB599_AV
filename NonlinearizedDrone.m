@@ -3,14 +3,6 @@ function X_dot = NonlinearizedDrone(T, X, tk1, tk2, tk3, td1, td2, td3, rk1, rk2
 
     % Define the inputs
     syms w1 w2 w3 w4
-
-    % Write the state equation
-    % if T < 6 && T > 1
-    %     U = [230, 225, 230, 225]';
-    % else
-    %     U = [225, 225, 225, 225]';
-    % end
-    % U = [197, 250, 197, 250]';
     U = [225, 225, 225, 225]';
     
     % Substitute the inputs
