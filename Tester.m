@@ -39,7 +39,8 @@ switch mass
 
     case "discrete"
         delta_mass = m0*0.25;
-        m = m0+ delta_mass -(1/(1+exp(-10000*T))*delta_mass);
+        t_drop = (t1+t0)/2;
+        m = m0+ delta_mass -(1/(1+exp(-10000*(T-t_drop)))*delta_mass);
         Ix = Ix0 + 0.00040757*(m-m0);
         Iy = Iy0 + 0.00040757*(m-m0);
         Iz = Iz0 + 0.00040757*(m-m0);
