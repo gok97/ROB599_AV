@@ -2,7 +2,7 @@
 function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(constants, debug)
     
     % Create variables
-    syms Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
+    syms T Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
 
     % Define the states
     syms x y z u v w phi theta psy p q r 
