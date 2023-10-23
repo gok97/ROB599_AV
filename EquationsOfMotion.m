@@ -1,8 +1,8 @@
 %% Define the linearization function
-function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(constants, debug)
+function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(constants, discretize, debug)
     
     % Create variables
-    syms T Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
+    syms dt Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
 
     % Define the states
     syms x y z u v w phi theta psy p q r 
@@ -110,6 +110,28 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
         rd1 = rd1_substituted;
         rd2 = rd2_substituted;
         rd3 = rd3_substituted;
+    end
+
+    % Discretize the system with respect to time
+    if discretize == true
+        eom_passive = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
+        eom = matlabFunction(eom_passive, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
+
+        stacked_equations = rk4_symbolic(eom);
+        stacked_equations = subs(stacked_equations, dt, 0.01);
+        
+        tk1 = stacked_equations(1);
+        tk2 = stacked_equations(2);
+        tk3 = stacked_equations(3);
+        td1 = stacked_equations(4);
+        td2 = stacked_equations(5);
+        td3 = stacked_equations(6);
+        rk1 = stacked_equations(7);
+        rk2 = stacked_equations(8);
+        rk3 = stacked_equations(9);
+        rd1 = stacked_equations(10);
+        rd2 = stacked_equations(11);
+        rd3 = stacked_equations(12);
     end
 
 end

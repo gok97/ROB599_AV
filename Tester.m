@@ -3,6 +3,9 @@ clear
 clc
 close all
 
+% Load cvx optimizer
+cvxfile()
+
 %% Set Variables
 condition = "hover";
 mass = "constant";
@@ -104,6 +107,8 @@ switch condition
 
     case "forward"
         syms us_straight ws_straight theta_straight u_straight
+        forward_speed = 2;
+        % NEEDS REVIEWING
         eqA = 4*K(14)*u_straight^2 == K(18)*K(17)*cos(theta_straight) + K(16)*K(6)*ws_straight^2;
         eqB = K(18)*K(17)*sin(theta_straight) == K(16)*K(4)*us_straight^2;
         eqC = 2*sin(theta_straight) == ws_straight;
@@ -113,7 +118,7 @@ switch condition
         ws_straight = double(ws_straight);
         theta_straight = double(theta_straight);
         u_straight = double(u_straight);
-        X0 = [0, 0, 0, us_straight(1), 0, ws_straight, 0, theta_straight, 0, 0, 0, 0];
+        X0 = [0, 0, 0, us_straight(1), 0, ws_straight(1), 0, theta_straight, 0, 0, 0, 0];
 
     case "diagonal"
 end
@@ -124,7 +129,7 @@ XU0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]';
 
 %% Compute the nonlinear equations and their linearized counterparts
 % Substitute for constants
-[tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(K, true);
+[tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(K, false, true);
 
 % Compute the jacobians
 [A, B] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3, XU0, true);

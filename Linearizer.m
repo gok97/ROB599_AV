@@ -2,7 +2,7 @@
 function [A_general, B_general] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3, equilibrium, debug)
     
     % Define the symbolic variables
-    syms x y z u v w phi theta psy p q r 
+    syms dt x y z u v w phi theta psy p q r 
     
     % Define the inputs
     syms w1 w2 w3 w4
@@ -40,6 +40,6 @@ function [A_general, B_general] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, 
     end
 
     % Convert the functions into function handles
-    A = matlabFunction(A_general, 'Vars', T);
-    B = matlabFunction(B_general, 'Vars', T);
+    A = matlabFunction(A_general, 'Vars', dt);
+    B = matlabFunction(B_general, 'Vars', dt);
 end
