@@ -113,6 +113,7 @@ XU0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]';
 
 %% Solve MPC
 % Define the MPC parameters
+X0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 Xbar = X0;
 Ubar = [u_hover, u_hover, u_hover, u_hover];
 Q = 10*eye(nx);
@@ -121,17 +122,19 @@ R = 0.1*eye(nu);
 % Define the reference trajectory
 Xref = [];
 i = 1;
-for t = -pi/2:(3*pi/N):3*pi/2 + 4*pi
-    Xref(i, :) = [5*cos(t), 5*cos(t)*sin(t), 1.2, zeros(1, 9)];
+for t = linspace(0, 5, N)
+% for t = linspace(-pi/2, 3*pi/2 + 4*pi, N)
+    % Xref(i, :) = [5*cos(t), 5*cos(t)*sin(t), 1.2, zeros(1, 9)];
+    Xref(i, :) = [t, 0, 1.2, zeros(1, 9)];
     i = i +1;
 end
 
 for i = 1:(N-1)
-    Xref(i,4) = norm((Xref(i+1,1:3) - Xref(i, 1:3)))/dt;
+    Xref(i,4:6) = (Xref(i+1,1:3) - Xref(i, 1:3))/dt;
 end
 
 % Define the reference control input
-Uref = ones(size(Xref))*u_hover;
+Uref = ones(N-1, nu)*u_hover;
 
 % Define the parameters for the MPC Problem
 % parameters = [horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt]
@@ -152,8 +155,8 @@ eom_list = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
 eom_list = matlabFunction(eom_list, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
 
 for i = 1:(N_sim-1)
+    fprintf("simulation iteration: %d", i);
     Usim(i, :) = DroneMPC(A, B, eom_list, parameters, X0, i);
-
     % Calculate the next step of the simulation
     [x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out] = parser(Xsim(i, :), Usim(i, :));
     Xsim(i+1, :) = eom_list(x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out);
@@ -166,6 +169,7 @@ if plot_bool == 1
       
     % Plot animation
     animation_fig = figure(2);
+    labels = ["x", "y", "z"];
     xlabel(labels(1));
     ylabel(labels(2));
     zlabel(labels(3));

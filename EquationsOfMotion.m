@@ -1,4 +1,4 @@
-%% Define the linearization function
+% Define the linearization function
 function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(constants, discretize, debug)
     
     % Create variables
@@ -11,13 +11,21 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
     syms w1 w2 w3 w4
     
     % Define the equations
-    tk1_sym = (cos(theta)*cos(psy))*u + ((-sin(psy)*cos(phi))+(cos(psy)*sin(theta)*sin(phi)))*v + ((sin(phi)*sin(psy))+(cos(phi)*sin(theta)*cos(psy)))*w;
-    tk2_sym = (cos(theta)*sin(psy))*u + ((cos(psy)*cos(phi))+(sin(psy)*sin(theta)*sin(phi)))*v + ((-sin(phi)*cos(psy))+(cos(phi)*sin(theta)*sin(psy)))*w;
-    tk3_sym = (-sin(theta))*u + (sin(phi)*cos(theta))*v + (cos(phi)*cos(theta))*w;
+    % tk1_sym = (cos(theta)*cos(psy))*u + ((-sin(psy)*cos(phi))+(cos(psy)*sin(theta)*sin(phi)))*v + ((sin(phi)*sin(psy))+(cos(phi)*sin(theta)*cos(psy)))*w;
+    % tk2_sym = (cos(theta)*sin(psy))*u + ((cos(psy)*cos(phi))+(sin(psy)*sin(theta)*sin(phi)))*v + ((-sin(phi)*cos(psy))+(cos(phi)*sin(theta)*sin(psy)))*w;
+    % tk3_sym = (-sin(theta))*u + (sin(phi)*cos(theta))*v + (cos(phi)*cos(theta))*w;
+    % 
+    % td1_sym = r*v - q*w + ((m*g*sin(theta)) - (ka*Ax*((xdot_w-u)^2)))/m;
+    % td2_sym = p*w - r*u + ((-m*g*sin(phi)*cos(theta)) - (ka*Ay*((ydot_w-v)^2)))/m;
+    % td3_sym = q*u - p*v + ((-m*g*cos(phi)*cos(theta)) + (kf*(w1^2 + w2^2 + w3^2 + w4^2)) - (ka*Az*((zdot_w-w)^2)))/m;
+    
+    tk1_sym = u;
+    tk2_sym = v;
+    tk3_sym = w;
 
-    td1_sym = r*v - q*w + ((m*g*sin(theta)) - (ka*Ax*((xdot_w-u)^2)))/m;
-    td2_sym = p*w - r*u + ((-m*g*sin(phi)*cos(theta)) - (ka*Ay*((ydot_w-v)^2)))/m;
-    td3_sym = q*u - p*v + ((-m*g*cos(phi)*cos(theta)) + (kf*(w1^2 + w2^2 + w3^2 + w4^2)) - (ka*Az*((zdot_w-w)^2)))/m;
+    td1_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * (sin(phi)*sin(psy)+cos(phi)*sin(theta)*cos(psy))) / m;
+    td2_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * (-sin(phi)*cos(psy)+cos(phi)*sin(theta)*sin(psy))) / m;
+    td3_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * cos(phi)*cos(theta) - m*g) / m;
     
     rk1_sym = p + q*sin(phi)*tan(theta) + r*cos(phi)*tan(theta);
     rk2_sym = q*cos(phi) - r*sin(phi);
