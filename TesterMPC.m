@@ -24,7 +24,7 @@ horizon = 40;
 syms T
 t0 = 0;
 t1 = 4;
-dt = 0.01;
+dt = 0.1;
 
 % Define the states
 syms x y z u v w phi theta psy p q r 
@@ -122,10 +122,10 @@ R = 0.1*eye(nu);
 % Define the reference trajectory
 Xref = [];
 i = 1;
-for t = linspace(0, 5, N)
-% for t = linspace(-pi/2, 3*pi/2 + 4*pi, N)
-    % Xref(i, :) = [5*cos(t), 5*cos(t)*sin(t), 1.2, zeros(1, 9)];
-    Xref(i, :) = [t, 0, 1.2, zeros(1, 9)];
+%for t = linspace(0, 5, N)
+for t = linspace(-pi/2, 3*pi/2 + 4*pi, N)
+    Xref(i, :) = [5*cos(t), 5*cos(t)*sin(t), 1.2, zeros(1, 9)];
+    %Xref(i, :) = [t, 0, 1.2, zeros(1, 9)];
     i = i +1;
 end
 

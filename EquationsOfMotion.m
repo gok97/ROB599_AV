@@ -31,8 +31,8 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
     rk2_sym = q*cos(phi) - r*sin(phi);
     rk3_sym = q*sin(phi)*sec(theta) + r*cos(phi)*sec(theta);
     
-    rd1_sym = (-((Iz-Iy)*q*r) - q*(w1+w2+w3+w4) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
-    rd2_sym = (-((Ix-Iz)*p*r) + p*(w1+w2+w3+w4) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
+    rd1_sym = (-((Iz-Iy)*q*r) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
+    rd2_sym = (-((Ix-Iz)*p*r) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
     rd3_sym = (-((Iy-Ix)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz;
   
     
