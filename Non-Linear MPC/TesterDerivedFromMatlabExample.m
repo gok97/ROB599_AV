@@ -13,7 +13,7 @@ MVrate_penallty = 0.1; % Penalty excessive control changes
 Ttot = 20; % Simulation duration
 
 video_name = 'test_video.avi';
-video_mode = "global";
+video_mode = "follow";
 
 % syms Ix Iy Iz m xdot_w ydot_w zdot_w
 m = 0.65;
@@ -25,11 +25,15 @@ ydot_w = 0;
 zdot_w = 0;
 
 % constants = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
-constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
+% constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
+constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 1, 7.5*(10^-7), 1.0, m, 9.81]';
+
 u_hover = sqrt(constants(17)*constants(18)/(4*constants(14)));
 
 %% Obtain the quadrotor dynamics and the associated jacbian
 QuadcopterModel;
+% QuadcopterModelJulia;
+% getQuadrotorDynamicsAndJacobian;
 
 %% Prepare the Non-Linear MPC
 % Define the non-linear mpc problem to feature 12 states, 12 outputs, and 4 inputs
@@ -49,22 +53,22 @@ nlmpcobj.Ts = dt;
 nlmpcobj.PredictionHorizon = pw;
 nlmpcobj.ControlHorizon = hz;
 
-% Add constraints to the control inputs:
-nlmpcobj.MV = struct( ...
-    Min={-1000;-1000;-1000;-1000}, ...
-    Max={1000;1000;1000;1000}, ...
-    RateMin={-1000;-1000;-1000;-1000}, ...
-    RateMax={1000;1000;1000;1000} ...
-    );
+% % Add constraints to the control inputs:
+% nlmpcobj.MV = struct( ...
+%     Min={-1000;-1000;-1000;-1000}, ...
+%     Max={1000;1000;1000;1000}, ...
+%     RateMin={-1000;-1000;-1000;-1000}, ...
+%     RateMax={1000;1000;1000;1000} ...
+%     );
 
 % Define the weights for the non-linear MPC
-nlmpcobj.Weights.OutputVariables = [1 1 1 0 0 0 0 0 0 0 0 0]; % Define the output variables to be tracked
+nlmpcobj.Weights.OutputVariables = [1 1 1 0 0 0 1 1 1 0 0 0]; % Define the output variables to be tracked
 nlmpcobj.Weights.ManipulatedVariables = [MV_penalty MV_penalty MV_penalty MV_penalty];
 nlmpcobj.Weights.ManipulatedVariablesRate = [MVrate_penallty MVrate_penallty MVrate_penallty MVrate_penallty];
 
 %% Execute the simulation
 % Specify the initial conditions
-x = [0;0;5;0;0;0;0;0;0;0;0;0];
+x = [0;0;6;0;0;0;0;0;0;0;0;0];
 
 % Define a nominal control target to maintain the quadcopter hovering
 nloptions = nlmpcmoveopt;
@@ -137,6 +141,7 @@ legend("Actual", "Target", 'Position', [0.425, 0.005, 0.2, 0.05])
 legend boxoff  
 hold off
 
+pause()
 
 % Plot animation
 animation_fig = figure(2);

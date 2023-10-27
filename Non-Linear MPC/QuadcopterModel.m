@@ -21,15 +21,18 @@
     tk3_sym = zdot;
     
     td1_sym = ((kf*(w1^2 + w2^2 + w3^2 + w4^2))*(sin(phi(t))*sin(psy(t))+cos(phi(t))*sin(theta(t))*cos(psy(t))) - (ka*Ax*((xdot_w-xdot)^2)))/m;
-    td2_sym = ((kf*(w1^2 + w2^2 + w3^2 + w4^2))*(-sin(phi(t))*cos(psy(t))+sin(phi(t))*sin(theta(t))*cos(psy(t)))  - (ka*Ay*((ydot_w-ydot)^2)))/m;
+    td2_sym = ((kf*(w1^2 + w2^2 + w3^2 + w4^2))*(-sin(phi(t))*cos(psy(t))+sin(psy(t))*sin(theta(t))*cos(phi(t)))  - (ka*Ay*((ydot_w-ydot)^2)))/m;
     td3_sym = (-m*g + (kf*(w1^2 + w2^2 + w3^2 + w4^2))*(cos(phi(t))*cos(theta(t)))  - (ka*Az*((zdot_w-zdot)^2)))/m;
-    
+
     rk1_sym = p + q*sin(phi(t))*tan(theta(t)) + r*cos(phi(t))*tan(theta(t));
     rk2_sym = q*cos(phi(t)) - r*sin(phi(t));
     rk3_sym = q*sin(phi(t))*sec(theta(t)) + r*cos(phi(t))*sec(theta(t));
     
-    rd1_sym = (-((Iz-Iy)*q*r) - q*(w1+w2+w3+w4) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
-    rd2_sym = (-((Ix-Iz)*p*r) + p*(w1+w2+w3+w4) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
+    % rd1_sym = (-((Iz-Iy)*q*r) - q*(w1+w2+w3+w4) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix; THIS IS WRONG
+    % rd2_sym = (-((Ix-Iz)*p*r) + p*(w1+w2+w3+w4) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy; THIS IS WRONG
+    % rd3_sym = (-((Iy-Ix)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz; THIS IS WRONG
+    rd1_sym = (-((Iz-Iy)*q*r)  - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
+    rd2_sym = (-((Ix-Iz)*p*r)  - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
     rd3_sym = (-((Iy-Ix)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz;
 
 

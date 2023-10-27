@@ -11,6 +11,17 @@ z = 6*cos(t/3);
 xdot = zeros(1,length(t));
 ydot = zeros(1,length(t));
 zdot = zeros(1,length(t));
+
+for i = 1:(length(t)-1)
+    xdot(i) = (x(i+1)-x(i))/(t(i+1)-t(i));
+    ydot(i) = (y(i+1)-y(i))/(t(i+1)-t(i));
+    zdot(i) = (z(i+1)-z(i))/(t(i+1)-t(i));
+end
+
+xdot(length(t)) = x(length(t)-1);
+ydot(length(t)) = y(length(t)-1);
+zdot(length(t)) = z(length(t)-1);
+
 phi = zeros(1,length(t));
 theta = zeros(1,length(t));
 psi = zeros(1,length(t));
