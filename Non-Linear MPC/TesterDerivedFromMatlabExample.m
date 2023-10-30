@@ -30,6 +30,40 @@ constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_
 
 u_hover = sqrt(constants(17)*constants(18)/(4*constants(14)));
 
+%% Compute time dependent disturbances such as mass:
+% Define Mass
+m0 = 0.65;
+Ix0 = 0.0087408;
+Iy0 = 0.0087408;
+Iz0 = 0.0173188;
+
+switch mass
+    case "constant"
+        m = m0;
+        Ix = Ix0;
+        Iy = Iy0;
+        Iz = Iz0;
+
+    case "continuous"
+        mass_rate = 0.05;
+        m = m0 + (mass_rate*(t1-t0)) - mass_rate*T;
+        Ix = Ix0 + 0.00040757*(m-m0);
+        Iy = Iy0 + 0.00040757*(m-m0);
+        Iz = Iz0 + 0.00040757*(m-m0);
+
+    case "discrete"
+        delta_mass = m0*0.25;
+        t_drop = (t1+t0)/2;
+        m = m0+ delta_mass -(1/(1+exp(-10000*(T-t_drop)))*delta_mass);
+        Ix = Ix0 + 0.00040757*(m-m0);
+        Iy = Iy0 + 0.00040757*(m-m0);
+        Iz = Iz0 + 0.00040757*(m-m0);
+        
+    case "symbolic"
+        syms Ix Iy Iz m
+
+end
+
 %% Obtain the quadrotor dynamics and the associated jacbian
 QuadcopterModel;
 % QuadcopterModelJulia;
