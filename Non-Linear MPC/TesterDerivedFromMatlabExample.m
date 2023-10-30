@@ -3,6 +3,8 @@ clear
 clc
 
 %% Set the problem variables
+
+% Set simulation parameters
 dt = 0.1; % Time increment
 pw = 18; % Prediction window
 hz = 2; % Horizon
@@ -12,8 +14,12 @@ MVrate_penallty = 0.1; % Penalty excessive control changes
 
 Ttot = 20; % Simulation duration
 
+% Set visualization settings
 video_name = 'test_video.avi';
 video_mode = "follow";
+
+% Disturbance settings
+mass = "continuous";
 
 % syms Ix Iy Iz m xdot_w ydot_w zdot_w
 m = 0.65;
@@ -24,45 +30,61 @@ xdot_w = 0;
 ydot_w = 0;
 zdot_w = 0;
 
-% constants = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
-% constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
-constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 1, 7.5*(10^-7), 1.0, m, 9.81]';
+% Generate the reference trajectory
+T_series = 0:dt:Ttot;
+wp=[0,0,0;
+    0,0,1;
+    5,5,1;
+    5,5,0.1];
+wv=[0,0,0;
+    0,0,0;
+    0,0,0;
+    0,0,0];
 
-u_hover = sqrt(constants(17)*constants(18)/(4*constants(14)));
+xTarget = QuadrotorRawTrajectory(length(T_series), wp, wv)';
 
-%% Compute time dependent disturbances such as mass:
-% Define Mass
+%% Compute time dependent disturbances such as mass and wind velocity
+syms t_m t_w
+t1 = 12.5; % End time of continuous drop
+t0 = 7.5; % Start Time of continuous drop
+t_drop = 10; % Time of descrete drop
+
+% Define system mass w/o payload
 m0 = 0.65;
 Ix0 = 0.0087408;
 Iy0 = 0.0087408;
 Iz0 = 0.0173188;
 
-switch mass
-    case "constant"
-        m = m0;
-        Ix = Ix0;
-        Iy = Iy0;
-        Iz = Iz0;
+% switch mass
+%     case "constant"
+%         m = m0;
+%         Ix = Ix0;
+%         Iy = Iy0;
+%         Iz = Iz0;
+% 
+%     case "continuous"
+%         mass_rate = 0.05;
+%         m = m0 + (mass_rate*(t1-t0)) - mass_rate*(tm-t0);
+%         Ix = Ix0 + 0.00040757*(m-m0);
+%         Iy = Iy0 + 0.00040757*(m-m0);
+%         Iz = Iz0 + 0.00040757*(m-m0);
+% 
+%     case "discrete"
+%         delta_mass = m0*0.25;
+%         m = m0+ delta_mass -(1/(1+exp(-10000*(tm-t_drop)))*delta_mass);
+%         Ix = Ix0 + 0.00040757*(m-m0);
+%         Iy = Iy0 + 0.00040757*(m-m0);
+%         Iz = Iz0 + 0.00040757*(m-m0);
+% 
+% end
 
-    case "continuous"
-        mass_rate = 0.05;
-        m = m0 + (mass_rate*(t1-t0)) - mass_rate*T;
-        Ix = Ix0 + 0.00040757*(m-m0);
-        Iy = Iy0 + 0.00040757*(m-m0);
-        Iz = Iz0 + 0.00040757*(m-m0);
+% Substitute in the constants array
+% constants = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
+% constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
+constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 1, 7.5*(10^-7), 1.0, m, 9.81]';
 
-    case "discrete"
-        delta_mass = m0*0.25;
-        t_drop = (t1+t0)/2;
-        m = m0+ delta_mass -(1/(1+exp(-10000*(T-t_drop)))*delta_mass);
-        Ix = Ix0 + 0.00040757*(m-m0);
-        Iy = Iy0 + 0.00040757*(m-m0);
-        Iz = Iz0 + 0.00040757*(m-m0);
-        
-    case "symbolic"
-        syms Ix Iy Iz m
-
-end
+% Compute an approximate hover condition
+u_hover = sqrt(constants(17)*constants(18)/(4*constants(14)));
 
 %% Obtain the quadrotor dynamics and the associated jacbian
 QuadcopterModel;
@@ -102,7 +124,7 @@ nlmpcobj.Weights.ManipulatedVariablesRate = [MVrate_penallty MVrate_penallty MVr
 
 %% Execute the simulation
 % Specify the initial conditions
-x = [0;0;6;0;0;0;0;0;0;0;0;0];
+x = [0;0;0;0;0;0;0;0;0;0;0;0];
 
 % Define a nominal control target to maintain the quadcopter hovering
 nloptions = nlmpcmoveopt;
@@ -125,11 +147,13 @@ for k = 1:(Ttot/dt)
 
     % Set references for previewing
     t = linspace(k*dt, (k+pw-1)*dt,pw);
-    yref = QuadrotorReferenceTrajectory(t);
+
+    % yref = QuadrotorReferenceTrajectory(t);
+    yref = QuadrotorReferenceReader(k, k+pw-1, xTarget);
 
     % Compute control move with reference previewing
     xk = xHistory(k,:);
-    [uk,nloptions,info] = nlmpcmove(nlmpcobj,xk,lastMV,yref',[],nloptions);
+    [uk,nloptions,info] = nlmpcmove(nlmpcobj,xk,lastMV,yref,[],nloptions);
 
     % Store control move
     uHistory(k+1,:) = uk';
@@ -153,8 +177,9 @@ close(hbar)
 % Plot all state variables against time
 summary_fig = figure(1);
 labels = ["X (m)", "Y (m)", "Z (m)", "Xdot (m/s)", "Ydot (m/s)", "Zdot (m/s)", "PHI (rad)", "THETA (rad)", "PSI (rad)", "P (rad/s)", "Q (rad/s)", "R (rad/s)"];
-T_series = 0:dt:Ttot;
-xTarget = QuadrotorReferenceTrajectory(T_series)';
+
+% T_series = 0:dt:Ttot;
+% xTarget = QuadrotorReferenceTrajectory(T_series)';
 
 for i = 1:6
     % Create a subplot in the ith position

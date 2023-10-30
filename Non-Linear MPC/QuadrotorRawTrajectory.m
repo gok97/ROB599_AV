@@ -28,61 +28,65 @@ for idx = 2:length(waypoints)
 end
 
 % Determine the target velocities based on the inputs
-if isempty(wayvelocities)
-    % If not specified, determine a target velocity trivially.
-    xdot = zeros(1,increments);
-    ydot = zeros(1,increments);
-    zdot = zeros(1,increments);
-    
-    for i = 1:(increments-1)
-        xdot(i) = (x(i+1)-x(i))/((i+1)-(i));
-        ydot(i) = (y(i+1)-y(i))/((i+1)-(i));
-        zdot(i) = (z(i+1)-z(i))/((i+1)-(i));
-    end
-    
-    xdot(increments) = x(increments-1);
-    ydot(increments) = y(increments-1);
-    zdot(increments) = z(increments-1);
+tot_counter = 1;
+for idx = 2:length(wayvelocities) 
 
-else
-    % If specified, enforce a simple constant acceleration model
-    tot_counter = 1;
-    for idx = 2:length(wayvelocities)        
-        dxdot = (wayvelocities(idx, 1) - wayvelocities(idx-1, 1))/inc_per_seg;
-        dydot = (wayvelocities(idx, 2) - wayvelocities(idx-1, 2))/inc_per_seg;
-        dzdot = (wayvelocities(idx, 3) - wayvelocities(idx-1, 3))/inc_per_seg;
+    % Compute the deltas
+    dx = (waypoints(idx, 1) - waypoints(idx-1, 1))/inc_per_seg;
+    dy = (waypoints(idx, 2) - waypoints(idx-1, 2))/inc_per_seg;
+    dz = (waypoints(idx, 3) - waypoints(idx-1, 3))/inc_per_seg;
 
-        % Add intermediate points
-        for jdx = 0:inc_per_seg
-            if jdx > (inc_per_seg/2)
-                jdx_ref = (2 - jdx/(inc_per_seg/2));
-            else
-                jdx_ref = jdx/(inc_per_seg/2);
-            end
+    dxdot = (wayvelocities(idx, 1) - wayvelocities(idx-1, 1))/inc_per_seg;
+    dydot = (wayvelocities(idx, 2) - wayvelocities(idx-1, 2))/inc_per_seg;
+    dzdot = (wayvelocities(idx, 3) - wayvelocities(idx-1, 3))/inc_per_seg;
 
-            if dxdot == 0 && wayvelocities(idx-1, 1) == 0
-                xdot(tot_counter) = jdx_ref * default_value;
-            else
-                xdot(tot_counter) = wayvelocities(idx-1, 1) + dxdot*jdx;
-            end
-
-            if dydot == 0 && wayvelocities(idx-1, 2) == 0
-                ydot(tot_counter) = jdx_ref * default_value;
-            else
-                ydot(tot_counter) = wayvelocities(idx-1, 2) + dydot*jdx;
-            end
-
-            if dzdot == 0 && wayvelocities(idx-1, 3) == 0
-                zdot(tot_counter) = jdx_ref * default_value;
-            else
-                zdot(tot_counter) = wayvelocities(idx-1, 3) + dzdot*jdx;
-
-            end
-
-            tot_counter = tot_counter + 1;
+    % Add intermediate points
+    for jdx = 0:inc_per_seg
+        if jdx > (inc_per_seg/2)
+            jdx_ref = (2 - jdx/(inc_per_seg/2));
+        else
+            jdx_ref = jdx/(inc_per_seg/2);
         end
+
+        if dxdot == 0 && wayvelocities(idx-1, 1) == 0 && dx ~=0
+            xdot(tot_counter) = jdx_ref * default_value;
+        else
+            xdot(tot_counter) = wayvelocities(idx-1, 1) + dxdot*jdx;
+        end
+
+        if dydot == 0 && wayvelocities(idx-1, 2) == 0 && dy ~=0
+            ydot(tot_counter) = jdx_ref * default_value;
+        else
+            ydot(tot_counter) = wayvelocities(idx-1, 2) + dydot*jdx;
+        end
+
+        if dzdot == 0 && wayvelocities(idx-1, 3) == 0 && dz ~=0
+            zdot(tot_counter) = jdx_ref * default_value;
+        else
+            zdot(tot_counter) = wayvelocities(idx-1, 3) + dzdot*jdx;
+
+        end
+
+        tot_counter = tot_counter + 1;
     end
+end
         
+
+
+% Add any missing rows
+if rem(inc_per_seg,1) ~= 0
+    current_len = length(x);
+
+    while length(x) ~= increments
+        x(current_len + 1) = waypoints(end, 1);
+        y(current_len + 1) = waypoints(end, 2);
+        z(current_len + 1) = waypoints(end, 3);
+        xdot(current_len + 1) = wayvelocities(end, 1);
+        ydot(current_len + 1) = wayvelocities(end, 2);
+        zdot(current_len + 1) = wayvelocities(end, 3);
+
+        current_len = current_len + 1;
+    end
 end
 
 % Leave the drone pose as unspecified
@@ -95,5 +99,6 @@ psidot = zeros(1,increments);
 
 % Populate the vector
 xdesired = [x;y;z;xdot;ydot;zdot;phi;theta;psi;phidot;thetadot;psidot];
+
 end
 
