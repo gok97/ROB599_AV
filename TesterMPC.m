@@ -19,6 +19,7 @@ nx = 12;
 nu = 4;
 N = 250;
 horizon = 40;
+dt = 0.1;
 
 % Define the simulation interval
 syms T
@@ -65,13 +66,14 @@ end
 
 % Define simulation constants
 % K = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
-K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
+% K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
+K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, 7.5*(10^-7), 1.0, m, 9.81]';
 
 % Define Initial Condition
 switch condition
     case "hover"
         u_hover = sqrt(K(17)*K(18)/(4*K(14)));
-        X0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        X0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     case "ascent"
         ws_ascent = 1;
@@ -98,11 +100,33 @@ end
 
 % Define the equilibrium point
 % XU0 = [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4];
-XU0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]'; % BASIC CASE: Hover
+XU0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]'; % BASIC CASE: Hover
 
 %% Compute the nonlinear equations and their linearized counterparts
+% Define the states
+syms x y z u v w phi theta psy p q r
+state = [x y z u v w phi theta psy p q r];
+    
+% Define the inputs
+syms w1 w2 w3 w4
+input = [w1 w2 w3 w4];
+
+next_state = rk4_symbolic(state, input, dt, K);
+tk1 = next_state(1);
+tk2 = next_state(2);
+tk3 = next_state(3);
+td1 = next_state(4);
+td2 = next_state(5);
+td3 = next_state(6);
+rk1 = next_state(7);
+rk2 = next_state(8);
+rk3 = next_state(9);
+rd1 = next_state(10);
+rd2 = next_state(11);
+rd3 = next_state(12);
+
 % Substitute for constants
-[tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(K, true, true);
+% [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, K, false, false);
 
 % Compute the jacobians
 [A, B] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3, XU0, false);
@@ -138,11 +162,11 @@ Uref = ones(N-1, nu)*u_hover;
 
 % Define the parameters for the MPC Problem
 % parameters = [horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt]
-parameters = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt};
+parameters = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt, K};
 
 % Execute the simulation
 N_sim = 100;
-Xsim = [];
+Xsim = [X0];
 Usim = [];
 for i = 1:N_sim
     Xsim(i, :) = X0;
@@ -151,15 +175,16 @@ for i = 1:N_sim-1
     Usim(i, :) = [0, 0, 0, 0];
 end
 
-eom_list = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
-eom_list = matlabFunction(eom_list, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
+% eom_list = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
+% eom_list = matlabFunction(eom_list, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
 
 for i = 1:(N_sim-1)
     fprintf("simulation iteration: %d", i);
-    Usim(i, :) = DroneMPC(A, B, eom_list, parameters, X0, i);
+    Usim(i, :) = DroneMPC(A, B, parameters, Xsim(i, :), i);
     % Calculate the next step of the simulation
-    [x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out] = parser(Xsim(i, :), Usim(i, :));
-    Xsim(i+1, :) = eom_list(x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out);
+    % [x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out] = parser(Xsim(i, :), Usim(i, :));
+    % Xsim(i+1, :) = eom_list(x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out);
+    Xsim(i+1, :) = double(rk4_symbolic(Xsim(i, :), Usim(i, :), dt, K));
 
 end
 

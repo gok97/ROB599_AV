@@ -1,23 +1,26 @@
 % Define the linearization function
-function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(constants, discretize, debug)
+function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, constants, discretize, debug)
     
     % Create variables
     syms dt Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
 
-    % Define the states
-    syms x y z u v w phi theta psy p q r 
-    
-    % Define the inputs
-    syms w1 w2 w3 w4
-    
-    % Define the equations
-    % tk1_sym = (cos(theta)*cos(psy))*u + ((-sin(psy)*cos(phi))+(cos(psy)*sin(theta)*sin(phi)))*v + ((sin(phi)*sin(psy))+(cos(phi)*sin(theta)*cos(psy)))*w;
-    % tk2_sym = (cos(theta)*sin(psy))*u + ((cos(psy)*cos(phi))+(sin(psy)*sin(theta)*sin(phi)))*v + ((-sin(phi)*cos(psy))+(cos(phi)*sin(theta)*sin(psy)))*w;
-    % tk3_sym = (-sin(theta))*u + (sin(phi)*cos(theta))*v + (cos(phi)*cos(theta))*w;
-    % 
-    % td1_sym = r*v - q*w + ((m*g*sin(theta)) - (ka*Ax*((xdot_w-u)^2)))/m;
-    % td2_sym = p*w - r*u + ((-m*g*sin(phi)*cos(theta)) - (ka*Ay*((ydot_w-v)^2)))/m;
-    % td3_sym = q*u - p*v + ((-m*g*cos(phi)*cos(theta)) + (kf*(w1^2 + w2^2 + w3^2 + w4^2)) - (ka*Az*((zdot_w-w)^2)))/m;
+    x = state(1);
+    y = state(2);
+    z = state(3);
+    u = state(4);
+    v = state(5);
+    w = state(6);
+    phi = state(7);
+    theta = state(8);
+    psy = state(9);
+    p = state(10);
+    q = state(11);
+    r = state(12);
+
+    w1 = input(1);
+    w2 = input(2);
+    w3 = input(3);
+    w4 = input(4);
     
     tk1_sym = u;
     tk2_sym = v;
@@ -31,9 +34,9 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
     rk2_sym = q*cos(phi) - r*sin(phi);
     rk3_sym = q*sin(phi)*sec(theta) + r*cos(phi)*sec(theta);
     
-    rd1_sym = (-((Iz-Iy)*q*r) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
-    rd2_sym = (-((Ix-Iz)*p*r) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
-    rd3_sym = (-((Iy-Ix)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz;
+    rd1_sym = (-((Iz-Iy)*q*r) + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
+    rd2_sym = (-((Ix-Iz)*p*r) + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
+    rd3_sym = (-((Iy-Ix)*p*q) + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz;
   
     
     % Print when debugging
@@ -121,25 +124,25 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
     end
 
     % Discretize the system with respect to time
-    if discretize == true
-        eom_passive = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
-        eom = matlabFunction(eom_passive, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
-
-        stacked_equations = rk4_symbolic(eom);
-        stacked_equations = subs(stacked_equations, dt, 0.01);
-        
-        tk1 = stacked_equations(1);
-        tk2 = stacked_equations(2);
-        tk3 = stacked_equations(3);
-        td1 = stacked_equations(4);
-        td2 = stacked_equations(5);
-        td3 = stacked_equations(6);
-        rk1 = stacked_equations(7);
-        rk2 = stacked_equations(8);
-        rk3 = stacked_equations(9);
-        rd1 = stacked_equations(10);
-        rd2 = stacked_equations(11);
-        rd3 = stacked_equations(12);
-    end
+    % if discretize == true
+    %     eom_passive = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
+    %     % eom = matlabFunction(eom_passive, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
+    % 
+    %     stacked_equations = rk4_symbolic(eom_passive);
+    %     stacked_equations = subs(stacked_equations, dt, 0.01);
+    % 
+    %     tk1 = stacked_equations(1);
+    %     tk2 = stacked_equations(2);
+    %     tk3 = stacked_equations(3);
+    %     td1 = stacked_equations(4);
+    %     td2 = stacked_equations(5);
+    %     td3 = stacked_equations(6);
+    %     rk1 = stacked_equations(7);
+    %     rk2 = stacked_equations(8);
+    %     rk3 = stacked_equations(9);
+    %     rd1 = stacked_equations(10);
+    %     rd2 = stacked_equations(11);
+    %     rd3 = stacked_equations(12);
+    % end
 
 end

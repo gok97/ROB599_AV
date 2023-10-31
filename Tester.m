@@ -92,7 +92,8 @@ end
 
 % Define simulation constants
 % K = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
-K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
+% K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
+K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, 7.5*(10^-7), 1.0, m, 9.81]';
 
 % Define Initial Condition
 switch condition
@@ -125,7 +126,7 @@ end
 
 % Define the equilibrium point
 % XU0 = [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4];
-XU0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]'; % BASIC CASE: Hover
+XU0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]'; % BASIC CASE: Hover
 
 %% Compute the nonlinear equations and their linearized counterparts
 % Substitute for constants
