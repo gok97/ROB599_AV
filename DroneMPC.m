@@ -4,7 +4,6 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, time_ind
     cvx_begin
 
         % Extract the needed variables from the parameters cell array:
-        % parameters = [horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt]
         horizon = parameters{1};
         Q = parameters{2};
         R = parameters{3};
@@ -14,6 +13,7 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, time_ind
         Uref =  parameters{7}(time_index:(time_index + horizon - 2), :);
         dt = parameters{10};
         K = parameters{11};
+        mass_type = parameters{12};
 
         % Define the delta_x and delta_u as cvx variables
          variable delta_X(horizon, parameters{8});
@@ -37,16 +37,11 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, time_ind
         % Define the initial condition constraint
         Xbar + delta_X(1, :) == initial_conditions;
     
-        % Define the dynamic constarints
+        % Define the dynamic constraints
         for i = 1:(horizon-1)
-           % [x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out] = parser(Xbar, Ubar);
-           A = double(A);
-           B = double(B);
-           % Xbar + delta_X(i+1, :) == eom_list(x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out) + delta_X(i, :)*A' + delta_U(i, :)*B';
-           Xbar + delta_X(i+1, :) == Xbar  + delta_X(i, :)*A' + delta_U(i, :)*B'; % rk4_symbolic(Xbar, Ubar, dt, K) 
+            time = (time_index + i) * dt;
+            Xbar + delta_X(i+1, :) == rk4(Xbar, Ubar, dt, K, time, mass_type, false)  + delta_X(i, :)*A' + delta_U(i, :)*B';
         end
-    
-        %cvx.solve!(prob, ECOS.Optimizer; silent_solver = true)
 
     cvx_end
     

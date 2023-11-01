@@ -1,8 +1,38 @@
 % Define the linearization function
-function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, constants, discretize, debug)
+function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, constants, t, mass_type, symbolic, debug)
+    if isempty(constants) && symbolic==false
+        error("Symbolic argument is set to false but the passed constants argument is empty!")
+    end
     
-    % Create variables
-    syms dt Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
+    if (symbolic==true)
+        % Create variables
+        syms Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
+    else
+        % K = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
+        Ix = constants(1);
+        Iy = constants(2);
+        Iz = constants(3);
+        Ax = constants(4);
+        Ay = constants(5);
+        Az = constants(6);
+        kdx = constants(7);
+        kdy = constants(8);
+        kdz = constants(9);
+        xdot_w = constants(10);
+        ydot_w = constants(11);
+        zdot_w = constants(12);
+        l = constants(13);
+        kf = constants(14);
+        km = constants(15);
+        ka = constants(16);
+        m = constants(17);
+        g = constants(18);
+        [m, Ix, Iy, Iz] = get_mass(constants, t, mass_type);
+        % m = mass_constants(1);
+        % Ix = mass_constants(2);
+        % Iy = mass_constants(3);
+        % Iz = mass_constants(4);
+    end
 
     x = state(1);
     y = state(2);
@@ -26,9 +56,9 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
     tk2_sym = v;
     tk3_sym = w;
 
-    td1_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * (sin(phi)*sin(psy)+cos(phi)*sin(theta)*cos(psy))) / m;
-    td2_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * (-sin(phi)*cos(psy)+cos(phi)*sin(theta)*sin(psy))) / m;
-    td3_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * cos(phi)*cos(theta) - m*g) / m;
+    td1_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * (sin(phi)*sin(psy)+cos(phi)*sin(theta)*cos(psy)) - (ka*Ax*((xdot_w-u)^2))) / m;
+    td2_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * (-sin(phi)*cos(psy)+cos(phi)*sin(theta)*sin(psy)) - (ka*Ay*((ydot_w-v)^2))) / m;
+    td3_sym = (kf*(w1^2 + w2^2 + w3^2 + w4^2) * cos(phi)*cos(theta) - m*g - (ka*Az*((zdot_w-w)^2))) / m;
     
     rk1_sym = p + q*sin(phi)*tan(theta) + r*cos(phi)*tan(theta);
     rk2_sym = q*cos(phi) - r*sin(phi);
@@ -37,7 +67,6 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
     rd1_sym = (-((Iz-Iy)*q*r) + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
     rd2_sym = (-((Ix-Iz)*p*r) + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
     rd3_sym = (-((Iy-Ix)*p*q) + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz;
-  
     
     % Print when debugging
     if debug == true
@@ -74,7 +103,7 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
         rd2 = rd2_sym;
         rd3 = rd3_sym;
 
-    else
+    elseif (isempty(constants)==false) && (symbolic==true)
         % Substitute constant values
         tk1_substituted = (subs(tk1_sym, [Ix; Iy; Iz; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m; g], constants));
         tk2_substituted = (subs(tk2_sym, [Ix; Iy; Iz; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m; g], constants));
@@ -121,28 +150,101 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
         rd1 = rd1_substituted;
         rd2 = rd2_substituted;
         rd3 = rd3_substituted;
+    else
+        tk1 = tk1_sym;
+        tk2 = tk2_sym;
+        tk3 = tk3_sym;
+        td1 = td1_sym;
+        td2 = td2_sym;
+        td3 = td3_sym;
+        rk1 = rk1_sym;
+        rk2 = rk2_sym;
+        rk3 = rk3_sym;
+        rd1 = rd1_sym;
+        rd2 = rd2_sym;
+        rd3 = rd3_sym;
     end
 
-    % Discretize the system with respect to time
-    % if discretize == true
-    %     eom_passive = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
-    %     % eom = matlabFunction(eom_passive, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
-    % 
-    %     stacked_equations = rk4_symbolic(eom_passive);
-    %     stacked_equations = subs(stacked_equations, dt, 0.01);
-    % 
-    %     tk1 = stacked_equations(1);
-    %     tk2 = stacked_equations(2);
-    %     tk3 = stacked_equations(3);
-    %     td1 = stacked_equations(4);
-    %     td2 = stacked_equations(5);
-    %     td3 = stacked_equations(6);
-    %     rk1 = stacked_equations(7);
-    %     rk2 = stacked_equations(8);
-    %     rk3 = stacked_equations(9);
-    %     rd1 = stacked_equations(10);
-    %     rd2 = stacked_equations(11);
-    %     rd3 = stacked_equations(12);
-    % end
-
 end
+
+function [m_dot, Ix_dot, Iy_dot, Iz_dot] = get_mass_dynamics(constants, m, t, mass_type)
+    mass_rate = 0.05;
+    t1 = 12.5; % End time of continuous drop
+    t0 = 7.5; % Start Time of continuous drop
+    t_drop = 10; % Time of descrete drop
+    Ix0 = constants(1);
+    Iy0 = constants(2);
+    Iz0 = constants(3);
+    m0 = constants(17);
+
+    switch mass_type
+    case "constant"
+        m_dot = 0;
+        Ix_dot = 0;
+        Iy_dot = 0;
+        Iz_dot = 0;
+
+    case "continuous"
+        if (m <= m0)
+            m_dot = 0;
+        else
+            m_dot = max(m0 + (mass_rate*(t1-t0)) - mass_rate*(t-t0), m0);
+            Ix_dot = 0.00040757;
+            Iy_dot = 0.00040757;
+            Iz_dot = 0.00040757;
+        end
+
+    case "discrete"
+        delta_mass = m0*0.75;
+        m = m0+ delta_mass -(1/(1+exp(-10000*(t-t_drop)))*delta_mass);
+        Ix = Ix0 + 0.00040757*(m-m0);
+        Iy = Iy0 + 0.00040757*(m-m0);
+        Iz = Iz0 + 0.00040757*(m-m0);
+    end
+end
+
+function [m, Ix, Iy, Iz] = get_mass(constants, t, mass_type)
+    mass_rate = 0.05;
+    t1 = 12.5; % End time of continuous drop
+    t0 = 7.5; % Start Time of continuous drop
+    t_drop = 10; % Time of descrete drop
+    Ix0 = constants(1);
+    Iy0 = constants(2);
+    Iz0 = constants(3);
+    m0 = constants(17);
+
+   switch mass_type
+    case "constant"
+       m = m0;
+       Ix = Ix0;
+       Iy = Iy0;
+       Iz = Iz0;
+
+    case "continuous"
+       if t > t0
+            m = m0 + (mass_rate*(t1-t0)) - mass_rate*(t-t0);
+            if (m < m0)
+                % minimal total mass of the drone is the mass of the drone with
+                % no payload
+                m = m0;
+            end
+            Ix = Ix0 + 0.00040757*(m-m0);
+            Iy = Iy0 + 0.00040757*(m-m0);
+            Iz = Iz0 + 0.00040757*(m-m0);
+       else
+           m = m0;
+           Ix = Ix0;
+           Iy = Iy0;
+           Iz = Iz0;
+       end
+
+    case "discrete"
+       delta_mass = m0*0.75;
+       m = m0+ delta_mass -(1/(1+exp(-10000*(t-t_drop)))*delta_mass);
+       Ix = Ix0 + 0.00040757*(m-m0);
+       Iy = Iy0 + 0.00040757*(m-m0);
+       Iz = Iz0 + 0.00040757*(m-m0);
+
+    end
+end
+

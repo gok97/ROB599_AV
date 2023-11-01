@@ -11,8 +11,6 @@ function control_input = DroneMPC_qp(A, B, parameters, initial_conditions, time_
     nu = parameters{9};
     dt = parameters{10};
     K = parameters{11};
-    A = double(A);
-    B = double(B);
 
     %   Compute the entries to the lifted system matrix
     H = zeros(nx*horizon, nu*horizon);         %   Initialize H
@@ -32,12 +30,12 @@ function control_input = DroneMPC_qp(A, B, parameters, initial_conditions, time_
     %   Compute r
     r_bar = zeros(1, nu*horizon);      %   Initialize r
     for i=1:horizon
-        r_bar = r_bar + 2*initial_conditions*(A^i)'*Q*H(nx*(i-1)+1:nx*i,:);
+        r_bar = r_bar + 2*(initial_conditions-Xbar)*(A^i)'*Q*H(nx*(i-1)+1:nx*i,:);
     end
 
     % solve QP
     options = optimoptions('quadprog', 'Algorithm', 'active-set');
     [u_opt, J_opt, exitflag, output] = quadprog(2*Q_bar, r_bar);
 
-    control_input = u_opt(1) + Uref(1);
+    control_input = u_opt(1:nu)' + Uref(1, :);
 end

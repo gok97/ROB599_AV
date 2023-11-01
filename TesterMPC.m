@@ -8,7 +8,7 @@ cvxfile()
 
 %% Set Variables
 condition = "hover";
-mass = "constant";
+mass_type = "continuous";
 wind = "none";
 mode = 0;
 plot_bool = 1;
@@ -33,14 +33,13 @@ syms x y z u v w phi theta psy p q r
 % Define the inputs
 syms w1 w2 w3 w4
 
-
 % Define Mass
 m0 = 0.65;
 Ix0 = 0.0087408;
 Iy0 = 0.0087408;
 Iz0 = 0.0173188;
 
-switch mass
+switch mass_type
     case "constant"
         m = m0;
         Ix = Ix0;
@@ -67,7 +66,7 @@ end
 % Define simulation constants
 % K = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
 % K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
-K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, 7.5*(10^-7), 1.0, m, 9.81]';
+K = [Ix0, Iy0, Iz0, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, 7.5*(10^-7), 1.0, m0, 9.81]';
 
 % Define Initial Condition
 switch condition
@@ -111,7 +110,7 @@ state = [x y z u v w phi theta psy p q r];
 syms w1 w2 w3 w4
 input = [w1 w2 w3 w4];
 
-next_state = rk4_symbolic(state, input, dt, K);
+next_state = rk4(state, input, dt, K, 0, mass_type, true);
 tk1 = next_state(1);
 tk2 = next_state(2);
 tk3 = next_state(3);
@@ -125,11 +124,10 @@ rd1 = next_state(10);
 rd2 = next_state(11);
 rd3 = next_state(12);
 
-% Substitute for constants
-% [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, K, false, false);
-
 % Compute the jacobians
 [A, B] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3, XU0, false);
+A = double(A);
+B = double(B);
 
 % Prepare the function handles for the equations of motion
 [tk1_function, tk2_function, tk3_function, td1_function, td2_function, td3_function, rk1_function, rk2_function, rk3_function, rd1_function, rd2_function, rd3_function] = Nonlinearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
@@ -146,10 +144,8 @@ R = 0.1*eye(nu);
 % Define the reference trajectory
 Xref = [];
 i = 1;
-%for t = linspace(0, 5, N)
 for t = linspace(-pi/2, 3*pi/2 + 4*pi, N)
     Xref(i, :) = [5*cos(t), 5*cos(t)*sin(t), 1.2, zeros(1, 9)];
-    %Xref(i, :) = [t, 0, 1.2, zeros(1, 9)];
     i = i +1;
 end
 
@@ -161,8 +157,7 @@ end
 Uref = ones(N-1, nu)*u_hover;
 
 % Define the parameters for the MPC Problem
-% parameters = [horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt]
-parameters = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt, K};
+parameters = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt, K, mass_type};
 
 % Execute the simulation
 N_sim = 100;
@@ -175,16 +170,12 @@ for i = 1:N_sim-1
     Usim(i, :) = [0, 0, 0, 0];
 end
 
-% eom_list = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
-% eom_list = matlabFunction(eom_list, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
-
 for i = 1:(N_sim-1)
-    fprintf("simulation iteration: %d", i);
+    fprintf("simulation iteration: %d\n", i);
     Usim(i, :) = DroneMPC(A, B, parameters, Xsim(i, :), i);
     % Calculate the next step of the simulation
-    % [x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out] = parser(Xsim(i, :), Usim(i, :));
-    % Xsim(i+1, :) = eom_list(x_out, y_out, z_out, u_out, v_out, w_out, phi_out, theta_out, psy_out, p_out, q_out, r_out, w1_out, w2_out, w3_out, w4_out);
-    Xsim(i+1, :) = double(rk4_symbolic(Xsim(i, :), Usim(i, :), dt, K));
+    time = dt*i;
+    Xsim(i+1, :) = rk4(Xsim(i, :), Usim(i, :), dt, K, time, mass_type, false);
 
 end
 
