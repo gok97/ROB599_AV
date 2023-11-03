@@ -1,100 +1,13 @@
 function main()
     setup_workspace();
-
-    %% Set Variables
-    condition = "hover";
+    plot_bool = 1;
     mass_type = "constant";
     wind_type = "none";
-    mode = 0;
-    plot_bool = 1;
-    study = false;
-    current_time = 0;
-
-    % Define the simulation interval
-    syms T
-    t0 = 0;
-    t1 = 4;
-    dt = 0.1;
-
-    % Define the states
-    syms x y z u v w phi theta psy p q r
-    state = [x y z u v w phi theta psy p q r];
-
-    % Define the inputs
-    syms w1 w2 w3 w4
-    input = [w1 w2 w3 w4];
-
-    % Define Mass
-    m0 = 0.65;
-    Ix0 = 0.0087408;
-    Iy0 = 0.0087408;
-    Iz0 = 0.0173188;
-
-    switch mass_type
-    case "constant"
-        m = m0;
-        Ix = Ix0;
-        Iy = Iy0;
-        Iz = Iz0;
-        
-    case "symbolic"
-        syms Ix Iy Iz m
-
-    end
-
-    % Define Wind
-    switch wind_type
-        case "none"
-            w_x = 0;
-            w_y = 0;
-            w_z = 0;
-
-        case "symbolic"
-        syms w_x w_y w_z
-
-    end
-
-    % define simulation constants
-    K = [Ix0, Iy0, Iz0, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, (7.5*(10^-7))/(3.13*(10^-5)), 1.0, m0, 9.81]';
-
-    % Define the equilibrium point
-    u_hover = sqrt(K(17)*K(18)/(4*K(14)));
-    XU0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]'; % BASIC CASE: Hover
-
-    % construct eom parameters
-    symbolic = true;
-    debug = false;
-    eom_params = {K, current_time, mass_type, wind_type, symbolic, debug};
-
-    % Discrerize continuous system and compute jacobians
-    [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params, XU0);
-
-    % Define the MPC parameters
-    nx = 12;
-    nu = 4;
-    N = 250;
-    horizon = 40;
-    X0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    Xbar = X0;
-    Ubar = [u_hover, u_hover, u_hover, u_hover];
-    Q = 10*eye(nx);
-    R = 0.1*eye(nu);
-
-
-    % Define the reference trajectory
-    Xref = get_reference_trajectory(N, dt);
-    
-    % Define the reference control input
-    Uref = ones(N-1, nu)*u_hover;
-
-    % Define the parameters for the MPC Problem
-    eom_params{5} = false; % set symbolic flag to false
-    mpc_params = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt, eom_params};
-    
+    [A, B, mpc_params] = initialize_params(mass_type, wind_type);
     [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params);
 
     if (plot_bool == 1)
-        plot_trajectory(Xsim);
+        plot_mpc_traj(Xsim, mpc_params);
     end
 end
 
@@ -131,6 +44,89 @@ function [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params,
     B = double(B);
 end
 
+function [A, B, mpc_params] = initialize_params(mass_type, wind_type)
+    %% Set Variables
+    mass_type = "constant";
+    wind_type = "none";
+    current_time = 0;
+
+    % Define the simulation interval
+    dt = 0.1;
+
+    % Define the states
+    syms x y z u v w phi theta psy p q r
+    state = [x y z u v w phi theta psy p q r];
+
+    % Define the inputs
+    syms w1 w2 w3 w4
+    input = [w1 w2 w3 w4];
+
+    % Define Mass
+    m0 = 0.65;
+    Ix0 = 0.0087408;
+    Iy0 = 0.0087408;
+    Iz0 = 0.0173188;
+
+    switch mass_type
+       case "constant"
+           m = m0;
+           Ix = Ix0;
+           Iy = Iy0;
+           Iz = Iz0;
+           
+       case "symbolic"
+           syms Ix Iy Iz m
+    end
+
+    % Define Wind
+    switch wind_type
+        case "none"
+            w_x = 0;
+            w_y = 0;
+            w_z = 0;
+
+        case "symbolic"
+           syms w_x w_y w_z
+    end
+
+    % define simulation constants
+    K = [Ix0, Iy0, Iz0, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, (7.5*(10^-7))/(3.13*(10^-5)), 1.0, m0, 9.81]';
+
+    % Define the equilibrium point
+    u_hover = sqrt(K(17)*K(18)/(4*K(14)));
+    XU0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0, u_hover, u_hover, u_hover, u_hover]'; % BASIC CASE: Hover
+
+    % construct eom parameters
+    symbolic = true;
+    debug = false;
+    eom_params = {K, current_time, mass_type, wind_type, symbolic, debug};
+
+    % Discrerize continuous system and compute jacobians
+    [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params, XU0);
+
+    % Define the MPC parameters
+    nx = 12;
+    nu = 4;
+    N = 250;
+    horizon = 40;
+    X0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    Xbar = X0;
+    Ubar = [u_hover, u_hover, u_hover, u_hover];
+    Q = 10*eye(nx);
+    R = 0.1*eye(nu);
+
+    % Define the reference trajectory
+    Xref = get_reference_trajectory(N, dt);
+    
+    % Define the reference control input
+    Uref = ones(N-1, nu)*u_hover;
+
+    % Define the parameters for the MPC Problem
+    eom_params{5} = false; % set symbolic flag to false
+    mpc_params = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt, eom_params};
+
+end
+
 function Xref = get_reference_trajectory(N, dt)
     Xref = [];
     i = 1;
@@ -144,7 +140,10 @@ function Xref = get_reference_trajectory(N, dt)
     end
 end
 
-function plot_trajectory(Xsim)      
+function plot_mpc_traj(Xsim, mpc_params)  
+    mode = 0;
+    dt = mpc_params{10};
+    K = mpc_params{11}{1};
     % Plot animation
     animation_fig = figure(2);
     labels = ["x", "y", "z"];
