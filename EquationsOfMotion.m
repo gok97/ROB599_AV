@@ -1,5 +1,13 @@
 % Define the linearization function
-function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, constants, t, mass_type, symbolic, debug)
+function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, eom_params)
+    % extract eom params
+    constants = eom_params{1};
+    current_time = eom_params{2};
+    mass_type = eom_params{3};
+    wind_type = eom_params{4};
+    symbolic = eom_params{5};
+    debug = eom_params{6};
+
     if isempty(constants) && symbolic==false
         error("Symbolic argument is set to false but the passed constants argument is empty!")
     end
@@ -27,7 +35,7 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
         ka = constants(16);
         m = constants(17);
         g = constants(18);
-        [m, Ix, Iy, Iz] = get_mass(constants, t, mass_type);
+        [m, Ix, Iy, Iz] = get_mass(constants, current_time, mass_type);
         % m = mass_constants(1);
         % Ix = mass_constants(2);
         % Iy = mass_constants(3);
@@ -165,42 +173,6 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
         rd3 = rd3_sym;
     end
 
-end
-
-function [m_dot, Ix_dot, Iy_dot, Iz_dot] = get_mass_dynamics(constants, m, t, mass_type)
-    mass_rate = 0.05;
-    t1 = 12.5; % End time of continuous drop
-    t0 = 7.5; % Start Time of continuous drop
-    t_drop = 10; % Time of descrete drop
-    Ix0 = constants(1);
-    Iy0 = constants(2);
-    Iz0 = constants(3);
-    m0 = constants(17);
-
-    switch mass_type
-    case "constant"
-        m_dot = 0;
-        Ix_dot = 0;
-        Iy_dot = 0;
-        Iz_dot = 0;
-
-    case "continuous"
-        if (m <= m0)
-            m_dot = 0;
-        else
-            m_dot = max(m0 + (mass_rate*(t1-t0)) - mass_rate*(t-t0), m0);
-            Ix_dot = 0.00040757;
-            Iy_dot = 0.00040757;
-            Iz_dot = 0.00040757;
-        end
-
-    case "discrete"
-        delta_mass = m0*0.75;
-        m = m0+ delta_mass -(1/(1+exp(-10000*(t-t_drop)))*delta_mass);
-        Ix = Ix0 + 0.00040757*(m-m0);
-        Iy = Iy0 + 0.00040757*(m-m0);
-        Iz = Iz0 + 0.00040757*(m-m0);
-    end
 end
 
 function [m, Ix, Iy, Iz] = get_mass(constants, t, mass_type)

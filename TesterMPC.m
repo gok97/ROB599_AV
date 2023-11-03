@@ -8,18 +8,18 @@ cvxfile()
 
 %% Set Variables
 condition = "hover";
-mass_type = "continuous";
-wind = "none";
+mass_type = "constant";
+wind_type = "none";
 mode = 0;
 plot_bool = 1;
 study = false;
+current_time = 0;
 
 % MPC Parameters
 nx = 12;
 nu = 4;
 N = 250;
 horizon = 40;
-dt = 0.1;
 
 % Define the simulation interval
 syms T
@@ -52,7 +52,7 @@ switch mass_type
 end
 
 % Define Wind
-switch wind
+switch wind_type
     case "none"
         w_x = 0;
         w_y = 0;
@@ -66,7 +66,7 @@ end
 % Define simulation constants
 % K = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
 % K = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
-K = [Ix0, Iy0, Iz0, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, 7.5*(10^-7), 1.0, m0, 9.81]';
+K = [Ix0, Iy0, Iz0, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, (7.5*(10^-7))/(3.13*(10^-5)), 1.0, m0, 9.81]';
 
 % Define Initial Condition
 switch condition
@@ -110,7 +110,13 @@ state = [x y z u v w phi theta psy p q r];
 syms w1 w2 w3 w4
 input = [w1 w2 w3 w4];
 
-next_state = rk4(state, input, dt, K, 0, mass_type, true);
+% construct eom parameters
+symbolic = true;
+debug = false;
+eom_params = {K, current_time, mass_type, wind_type, symbolic, debug};
+
+% discretize continuous system
+next_state = rk4(state, input, dt, eom_params);
 tk1 = next_state(1);
 tk2 = next_state(2);
 tk3 = next_state(3);
@@ -157,7 +163,8 @@ end
 Uref = ones(N-1, nu)*u_hover;
 
 % Define the parameters for the MPC Problem
-parameters = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt, K, mass_type};
+eom_params{5} = false;
+mpc_params = {horizon, Q, R, Xbar, Ubar, Xref, Uref, nx, nu, dt, eom_params};
 
 % Execute the simulation
 N_sim = 100;
@@ -172,10 +179,14 @@ end
 
 for i = 1:(N_sim-1)
     fprintf("simulation iteration: %d\n", i);
-    Usim(i, :) = DroneMPC(A, B, parameters, Xsim(i, :), i);
+    % update current time
+    current_time = dt*i;
+    eom_params{2} = current_time;
+    mpc_params{11} = eom_params;
+    % get control input from linear MPC
+    Usim(i, :) = DroneMPC(A, B, mpc_params, Xsim(i, :), i);
     % Calculate the next step of the simulation
-    time = dt*i;
-    Xsim(i+1, :) = rk4(Xsim(i, :), Usim(i, :), dt, K, time, mass_type, false);
+    Xsim(i+1, :) = rk4(Xsim(i, :), Usim(i, :), dt, eom_params);
 
 end
 

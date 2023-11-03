@@ -12,8 +12,7 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, time_ind
         Xref =  parameters{6}(time_index:(time_index + horizon - 1), :);
         Uref =  parameters{7}(time_index:(time_index + horizon - 2), :);
         dt = parameters{10};
-        K = parameters{11};
-        mass_type = parameters{12};
+        eom_params = parameters{11};
 
         % Define the delta_x and delta_u as cvx variables
          variable delta_X(horizon, parameters{8});
@@ -39,8 +38,10 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, time_ind
     
         % Define the dynamic constraints
         for i = 1:(horizon-1)
-            time = (time_index + i) * dt;
-            Xbar + delta_X(i+1, :) == rk4(Xbar, Ubar, dt, K, time, mass_type, false)  + delta_X(i, :)*A' + delta_U(i, :)*B';
+            % update mpc time
+            mpc_time = (time_index + i) * dt;
+            eom_params{2} = mpc_time;
+            Xbar + delta_X(i+1, :) == rk4(Xbar, Ubar, dt, eom_params)  + delta_X(i, :)*A' + delta_U(i, :)*B';
         end
 
     cvx_end
