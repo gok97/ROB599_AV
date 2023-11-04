@@ -1,30 +1,33 @@
 %% Define the linearization function
-function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(constants, discretize, debug)
+function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(constants, debug)
     
     % Create variables
-    syms dt Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
+    syms Ix Iy Iz Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m g
 
     % Define the states
-    syms x y z u v w phi theta psy p q r 
+    syms x y z xdot ydot zdot phi theta psy p q r
     
     % Define the inputs
     syms w1 w2 w3 w4
     
     % Define the equations
-    tk1_sym = (cos(theta)*cos(psy))*u + ((-sin(psy)*cos(phi))+(cos(psy)*sin(theta)*sin(phi)))*v + ((sin(phi)*sin(psy))+(cos(phi)*sin(theta)*cos(psy)))*w;
-    tk2_sym = (cos(theta)*sin(psy))*u + ((cos(psy)*cos(phi))+(sin(psy)*sin(theta)*sin(phi)))*v + ((-sin(phi)*cos(psy))+(cos(phi)*sin(theta)*sin(psy)))*w;
-    tk3_sym = (-sin(theta))*u + (sin(phi)*cos(theta))*v + (cos(phi)*cos(theta))*w;
-
-    td1_sym = r*v - q*w + ((m*g*sin(theta)) - (ka*Ax*((xdot_w-u)^2)))/m;
-    td2_sym = p*w - r*u + ((-m*g*sin(phi)*cos(theta)) - (ka*Ay*((ydot_w-v)^2)))/m;
-    td3_sym = q*u - p*v + ((-m*g*cos(phi)*cos(theta)) + (kf*(w1^2 + w2^2 + w3^2 + w4^2)) - (ka*Az*((zdot_w-w)^2)))/m;
+    tk1_sym = xdot;
+    tk2_sym = ydot;
+    tk3_sym = zdot;
     
+    td1_sym = ((kf*(w1^2 + w2^2 + w3^2 + w4^2))*(sin(phi)*sin(psy)+cos(phi)*sin(theta)*cos(psy)) - (ka*Ax*((xdot_w-xdot)^2)))/m;
+    td2_sym = ((kf*(w1^2 + w2^2 + w3^2 + w4^2))*(-sin(phi)*cos(psy)+sin(psy)*sin(theta)*cos(phi))  - (ka*Ay*((ydot_w-ydot)^2)))/m;
+    td3_sym = (-m*g + (kf*(w1^2 + w2^2 + w3^2 + w4^2))*(cos(phi)*cos(theta))  - (ka*Az*((zdot_w-zdot)^2)))/m;
+
     rk1_sym = p + q*sin(phi)*tan(theta) + r*cos(phi)*tan(theta);
     rk2_sym = q*cos(phi) - r*sin(phi);
     rk3_sym = q*sin(phi)*sec(theta) + r*cos(phi)*sec(theta);
     
-    rd1_sym = (-((Iz-Iy)*q*r) - q*(w1+w2+w3+w4) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
-    rd2_sym = (-((Ix-Iz)*p*r) + p*(w1+w2+w3+w4) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
+    % rd1_sym = (-((Iz-Iy)*q*r) - q*(w1+w2+w3+w4) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix; THIS IS WRONG
+    % rd2_sym = (-((Ix-Iz)*p*r) + p*(w1+w2+w3+w4) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy; THIS IS WRONG
+    % rd3_sym = (-((Iy-Ix)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz; THIS IS WRONG
+    rd1_sym = (-((Iz-Iy)*q*r)  - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix;
+    rd2_sym = (-((Ix-Iz)*p*r)  - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy;
     rd3_sym = (-((Iy-Ix)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz;
   
     
@@ -110,28 +113,6 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
         rd1 = rd1_substituted;
         rd2 = rd2_substituted;
         rd3 = rd3_substituted;
-    end
-
-    % Discretize the system with respect to time
-    if discretize == true
-        eom_passive = stacker(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3);
-        eom = matlabFunction(eom_passive, 'Vars',  [x, y, z, u, v, w, phi, theta, psy, p, q, r, w1, w2, w3, w4]);
-
-        stacked_equations = rk4_symbolic(eom);
-        stacked_equations = subs(stacked_equations, dt, 0.01);
-        
-        tk1 = stacked_equations(1);
-        tk2 = stacked_equations(2);
-        tk3 = stacked_equations(3);
-        td1 = stacked_equations(4);
-        td2 = stacked_equations(5);
-        td3 = stacked_equations(6);
-        rk1 = stacked_equations(7);
-        rk2 = stacked_equations(8);
-        rk3 = stacked_equations(9);
-        rd1 = stacked_equations(10);
-        rd2 = stacked_equations(11);
-        rd3 = stacked_equations(12);
     end
 
 end
