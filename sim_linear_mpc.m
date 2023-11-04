@@ -13,6 +13,7 @@ function [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params)
     for i = 1:N_sim-1
         Usim(i, :) = [0, 0, 0, 0];
     end
+    Uprev = [0, 0, 0, 0];
     for i = 1:(N_sim-1)
         fprintf("simulation iteration: %d\n", i);
         % update current time
@@ -20,7 +21,8 @@ function [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params)
         eom_params{2} = current_time;
         mpc_params{11} = eom_params;
         % get control input from linear MPC
-        Usim(i, :) = DroneMPC(A, B, mpc_params, Xsim(i, :), i);
+        Usim(i, :) = DroneMPC(A, B, mpc_params, Xsim(i, :), Uprev, i);
+        Uprev = Usim(i, :);
         % Calculate the next step of the simulation
         Xsim(i+1, :) = rk4(Xsim(i, :), Usim(i, :), dt, eom_params);
     end

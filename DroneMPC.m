@@ -1,5 +1,5 @@
 %% Define the function that performs Model Predictive Control for the MPC
-function control_input = DroneMPC(A, B, parameters, initial_conditions, time_index)
+function control_input = DroneMPC(A, B, parameters, initial_conditions, Uprev, time_index)
     % Begin the cvx problem
     cvx_begin
 
@@ -36,16 +36,23 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, time_ind
         % Define the initial condition constraint
         Xbar + delta_X(1, :) == initial_conditions;
     
-        % Define the dynamic constraints
+        % Define the dynamics and control constraints
         for i = 1:(horizon-1)
             % update mpc time
             mpc_time = (time_index + i) * dt;
             eom_params{2} = mpc_time;
+            % dynamics constraints
             Xbar + delta_X(i+1, :) == rk4(Xbar, Ubar, dt, eom_params)  + delta_X(i, :)*A' + delta_U(i, :)*B';
+            % control input constraints
+            Ubar + delta_U(i, :) <= Ubar(1)*5;
+            Ubar + delta_U(i, :) >= 0.0;
+            Ubar + delta_U(i, :) - Uprev >= -Ubar(1)*5;
+            Ubar + delta_U(i, :) - Uprev <= (Ubar(1)*5) / 2;
+            Uprev = Ubar + delta_U(i, :);
         end
 
     cvx_end
     
     % Compute the desired output
-    control_input = Ubar(1) + delta_U(1, :);
+    control_input = Ubar + delta_U(1, :);
 end
