@@ -12,22 +12,19 @@ hz = 2; % Horizon
 MV_penalty = 0.1; % Penalise the controls tracking in favour of the output tracking
 MVrate_penallty = 0.1; % Penalty excessive control changes
 
-Ttot = 20; % Simulation duration
-
 % Set visualization settings
 video_name = 'test_video.avi';
 video_mode = "follow";
 
 % Disturbance settings
-mass = "discrete";
-wind = "gust+";
+mass = "constant";
+wind = "none";
 
 xdot_w = 0;
 ydot_w = 0;
 zdot_w = 0;
 
 % Generate the reference trajectory
-T_series = 0:dt:Ttot;
 wp=[0,0,0;
     0,0,1;
     5,5,1;
@@ -37,7 +34,10 @@ wv=[0,0,0;
     0,0,0;
     0,0,0];
 
-xTarget = QuadrotorRawTrajectory(length(T_series), wp, wv)';
+xTarget = QuadrotorRawTrajectoryImproved(dt, wp, wv)';
+
+Ttot = (length(xTarget)*dt)-dt;
+T_series = 0:dt:Ttot;
 
 %% Compute time dependent disturbances such as mass and wind velocity
 syms t_m t_w
@@ -125,7 +125,7 @@ end
 % Substitute in the constants array
 % constants = [Ix, Iy, Iz, Ax, Ay, Az, kdx, kdy, kdz, xdot_w, ydot_w, zdot_w, l, kf, km, ka, m, g];
 % constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, xdot_w, ydot_w, zdot_w, 0.23, 3.13*(10^-5), 7.5*(10^-7), 1.0, m, 9.81]';
-constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1, 7.5*(10^-7), 1.0, m, 9.81]';
+constants = [Ix, Iy, Iz, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1, 7.5*(10^-7)/(3.13*(10^-5)), 1.0, m, 9.81]';
 
 % Compute an approximate hover condition
 % u_hover = sqrt(constants(17)*constants(18)/(4*constants(14)));
@@ -195,13 +195,13 @@ for k = 1:(Ttot/dt)
         nlmpcobj.PredictionHorizon = pw;
         nlmpcobj.ControlHorizon = hz;
         
-        % % Add constraints to the control inputs:
-        % nlmpcobj.MV = struct( ...
-        %     Min={-1000;-1000;-1000;-1000}, ...
-        %     Max={1000;1000;1000;1000}, ...
-        %     RateMin={-1000;-1000;-1000;-1000}, ...
-        %     RateMax={1000;1000;1000;1000} ...
-        %     );
+        % Add constraints to the control inputs:
+        nlmpcobj.MV = struct( ...
+            Min={0;0;0;0}, ...
+            Max={u_hover*5;u_hover*5;u_hover*5;u_hover*5}, ...
+            RateMin={-u_hover*5;-u_hover*5;-u_hover*5;-u_hover*5}, ...
+            RateMax={u_hover*2.5;u_hover*2.5;u_hover*2.5;u_hover*2.5} ...
+            );
         
         % Define the weights for the non-linear MPC
         nlmpcobj.Weights.OutputVariables = [1 1 1 0 0 0 1 1 1 0 0 0]; % Define the output variables to be tracked
