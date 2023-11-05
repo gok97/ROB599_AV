@@ -4,7 +4,8 @@ function [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params)
     dt = mpc_params{10};
     eom_params = mpc_params{11};
     % Execute the simulation
-    N_sim = 100;
+    Xref = mpc_params{6};
+    N_sim = 50; %length(Xref);
     Xsim = [X0];
     Usim = [];
     for i = 1:N_sim

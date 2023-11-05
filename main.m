@@ -6,7 +6,8 @@ function main()
     trajectory_info = load_trajectory_info(false);
     
     % extract trajectory info
-    trajectory = trajectory_info{1};
+    xDesired = trajectory_info{1};
+    xDesired = get_reference_trajectory(100, 0.05);
     increment_indices = trajectory_info{2};
     mass_step = trajectory_info{3};
     mass_ramp = trajectory_info{4};
@@ -14,7 +15,7 @@ function main()
     wind_step = trajectory_info{6};
     wind_random = trajectory_info{7};
 
-    [A, B, mpc_params] = initialize_params(trajectory, mass_step, wind_step);
+    [A, B, mpc_params] = initialize_params(xDesired, ones(length(mass_step), 1)*mass_step(1, :), zeros(size(wind_step)));
     [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params);
 
     if (plot_bool == 1)
@@ -55,13 +56,13 @@ function [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params,
     B = double(B);
 end
 
-function [A, B, mpc_params] = initialize_params(trajectory, mass, wind)
+function [A, B, mpc_params] = initialize_params(xDesired, mass, wind)
     %% Set Variables
     % mass_type = "constant";
     % wind_type = "none";
 
     % Define the simulation interval
-    dt = 0.1;
+    dt = 0.05;
 
     % Define the states
     syms x y z u v w phi theta psy p q r
@@ -72,15 +73,15 @@ function [A, B, mpc_params] = initialize_params(trajectory, mass, wind)
     input = [w1 w2 w3 w4];
 
     % Define Mass
-    m0 = mass_array(1, 1); % 0.65;
-    Ix0 = mass_array(1, 2); % 0.0087408;
-    Iy0 = mass_array(1, 3);
-    Iz0 = mass_array(1, 4);
+    m0 = mass(1, 1); % 0.65;
+    Ix0 = mass(1, 2); % 0.0087408;
+    Iy0 = mass(1, 3);
+    Iz0 = mass(1, 4);
     
     % Define Wind
-    w_x = wind_array(1, 1);
-    w_y = wind_array(1, 2);
-    w_z = wind_array(1, 3);
+    w_x = wind(1, 1);
+    w_y = wind(1, 2);
+    w_z = wind(1, 3);
 
     % switch mass_type
     %    case "constant"
@@ -133,7 +134,7 @@ function [A, B, mpc_params] = initialize_params(trajectory, mass, wind)
 
     % Define the reference trajectory
     % Xref = get_reference_trajectory(N, dt);
-    Xref = trajectory';
+    Xref = xDesired;
     
     % Define the reference control input
     Uref = ones(N-1, nu)*u_hover;
@@ -159,19 +160,19 @@ end
 
 function trajectory_info = load_trajectory_info(plot_bool)
     % load trajectory info
-    trajectory = load("Trajectories\trajectory.mat").trajectory_Vset;
+    xDesired = load("Trajectories\trajectory.mat").xDesired';
     % load increment indices info
-    increment_indices = load("Trajectories\increment_index.mat").n_summary;
+    increment_index = load("Trajectories\increment_index.mat").n_summary;
     % load mass info 
-    m_step = load("Trajectories\mass_step.mat").m_step;
-    m_ramp = load("Trajectories\mass_ramp.mat").m_ramp;
+    mass_step = load("Trajectories\mass_step.mat").mass_matrix;
+    mass_ramp = load("Trajectories\mass_ramp.mat").mass_matrix;
     % load wind info
-    w_ramp = load("Trajectories\wind_ramp.mat").w_ramp;
-    w_step = load("Trajectories\wind_step.mat").w_step;
-    w_random = load("Trajectories\wind_random.mat").w_random;
+    wind_ramp = load("Trajectories\wind_ramp.mat").wind_matrix;
+    wind_step = load("Trajectories\wind_step.mat").wind_matrix;
+    wind_random = load("Trajectories\wind_random.mat").wind_matrix;
     
-    trajectory_info = {trajectory, increment_indices, m_step, m_ramp, w_ramp, w_step, w_random};
-    plot_data = {trajectory(1, :), trajectory(2, :), trajectory(3, :), trajectory(4, :), trajectory(5, :), trajectory(6, :), w_step(:, 1), w_step(:, 2), m_step(:, 1), w_ramp(:, 1), w_ramp(:, 2), m_ramp(:, 1)};
+    trajectory_info = {xDesired, increment_index, mass_step, mass_ramp, wind_ramp, wind_step, wind_random};
+    plot_data = {xDesired(1, :), xDesired(2, :), xDesired(3, :), xDesired(4, :), xDesired(5, :), xDesired(6, :), wind_step(:, 1), wind_step(:, 2), mass_step(:, 1), wind_ramp(:, 1), wind_ramp(:, 2), mass_ramp(:, 1)};
     tot_inc = 0.01;
     T_series = 0:tot_inc:(length(plot_data{1})-1)*tot_inc;
     
