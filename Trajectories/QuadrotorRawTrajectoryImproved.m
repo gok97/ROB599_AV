@@ -12,7 +12,7 @@ else
 end
 
 % Assume a constant max acceleration motion model
-absolute_max_acceleration = 1;
+absolute_max_acceleration = 10;
 
 % For each segment, determine how much time is needed
 xdesired = [];
@@ -107,6 +107,7 @@ for idx = 2:length(waypoints)
         end
         
         % Compute the target points for each axis
+        temp_xdesired = [];
         for eqt = 1:3
             x_prev = waypoints(idx-1, eqt);
             for jdx = 1:n_increments_max

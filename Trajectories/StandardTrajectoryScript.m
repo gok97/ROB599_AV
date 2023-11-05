@@ -4,7 +4,7 @@ clc
 
 %% Settings
 % Time interval
-dt = 0.1;
+dt = 0.01;
 
 % Define the waypoints
 waypoints = [0, 0, 0;

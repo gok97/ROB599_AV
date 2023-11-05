@@ -1,0 +1,17 @@
+%% Function to analyse the performance of the controller
+function metrics = PerformanceEvaluator(n_event, dt, xDesired, xActual)
+
+    % Find the difference between the two arrays
+    delta_x = pdist2(xDesired(1:6, :), xActual(1:6, :));
+    delta_relevant = delta(:, n_event:end);
+    
+    % Compute the metrics
+    [max_error, ~] = max(delta_relevant);
+    [~, n_stable] = min(delta_relevant);
+    recovery_time = n_stable/dt;
+
+    ss_error = 
+    
+    % Return the metrics
+    metrics = [recovery_time, max_error, ss_error];
+end
