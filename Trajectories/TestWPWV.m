@@ -3,7 +3,7 @@ clear
 clc
 
 %% Prepare variables
-tot_inc = 0.01;
+tot_inc = 0.05;
 waypoints = [0, 0, 0;
             0, 0, 30;
             50, 50, 30;
