@@ -10,9 +10,9 @@ dt = 0.05;
 waypoints = [0, 0, 0;
             0, 0, 30;
             50, 50, 30;
-            100, 100, 30;
-            150, 150, 30;
-            150, 150, 0.5];
+            250, 250, 30;
+            300, 300, 30;
+            300, 300, 0.5];
 
 velocities = [0, 0, 0;
             0, 0, 0;
@@ -40,9 +40,9 @@ wind_extra = 3;
 wind_time = 3;
 
 % Define when the step and ramp should be triggered
-xyz_drop = [75, 75, 30];
-xyz_start = [60, 60, 30];
-xyz_end = [90, 90, 30];
+xyz_drop = [150, 150, 30];
+xyz_start = [100, 100, 30];
+xyz_end = [200, 200, 30];
 
 %% Generate the necessary trajectories
 % Generate the trajectory
