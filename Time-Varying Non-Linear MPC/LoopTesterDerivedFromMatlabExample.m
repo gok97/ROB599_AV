@@ -3,22 +3,33 @@ clear
 clc
 
 %% Setup loop variables
-pw_list = [10, 15, 20, 25, 30];
-hz_list = [1, 2, 3, 4, 5, 10];
-condition = ["mass_ramp.mat", "mass_step.mat", "wind_step.map", "wind_ramp.mat"];
+pw_list = [5, 10, 15, 20, 25];
+hz_list = [1, 2, 3, 4, 5];
+condition = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.map", "wind_step.mat"];
 
 for cond_idx = 1:4
+    if cond_idx < 3
+        wind_matrix = zeros(319,3);
+        wind_matrix(:, 1) = 7/sqrt(2);
+        wind_matrix(:, 2) = 7/sqrt(2);
+    else
+        mass_matrix = zeros(319,4);
+        mass_matrix(:, 1) = 0.65;
+        mass_matrix(:, 2) = 0.0087408;
+        mass_matrix(:, 3) = 0.0087408;
+        mass_matrix(:, 4) = 0.0173188;
+    end
 
     for pw_idx = 1:5
     
-        for hz_idx = 1:6
+        for hz_idx = 1:5
 
             current_fname = "NL_Cond" + condition(cond_idx) + "_Pw" + pw_list(pw_idx) + "_Hz" + hz_list(hz_idx)
             %% Set the problem variables
             % Set simulation parameters
             dt = 0.05; % Time increment
             pw = pw_list(pw_idx); % Prediction window
-            hz = hz_list(hz_list); % Horizon
+            hz = hz_list(hz_idx); % Horizon
             
             MV_penalty = 0.1; % Penalise the controls tracking in favour of the output tracking
             MVrate_penallty = 0; % Penalty excessive control changes
@@ -76,6 +87,7 @@ for cond_idx = 1:4
                 yref = QuadrotorReferenceReader(k, k+pw-1, xDesired);
                 
                 % PREPARE THE NEW MODEL
+                if k == 1 || (mass_matrix(k-1, 1) ~= mass_matrix(k, 1) || wind_matrix(k, 1) ~= wind_matrix(k-1, 1))
                     % Substitute new constants and re-compute the model
                     constants = [mass_matrix(k, 2), mass_matrix(k, 3), mass_matrix(k, 4), 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, wind_matrix(k, 1), wind_matrix(k, 2), wind_matrix(k, 3), 0.23, 1, 7.5*(10^-7), 1.0, mass_matrix(k, 1), 9.81]';
                     QuadcopterModel;
@@ -110,7 +122,7 @@ for cond_idx = 1:4
                     nlmpcobj.Weights.ManipulatedVariables = [MV_penalty MV_penalty MV_penalty MV_penalty];
                     nlmpcobj.Weights.ManipulatedVariablesRate = [MVrate_penallty MVrate_penallty MVrate_penallty MVrate_penallty];
                 % END OF NEW MODEL PREPARATION
-            
+                end
                 % Compute control move with reference previewing
                 xk = xHistory(k,:);
                 [uk,nloptions,info] = nlmpcmove(nlmpcobj,xk,double(lastMV),yref,[],nloptions);
