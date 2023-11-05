@@ -41,7 +41,7 @@ wind_extra = 3;
 wind_time = 3;
 
 % Define when the step and ramp should be triggered
-xyz_drop = [100, 100, 30];
+xyz_drop = [75, 75, 30];
 xyz_start = [60, 60, 30];
 xyz_end = [90, 90, 30];
 
