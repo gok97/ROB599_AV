@@ -1,7 +1,7 @@
 function [xdesired] = QuadrotorRawTrajectoryImproved(delta_increment, waypoints, wayvelocities, constant_settings)
 % This function generates the raw trajectory based on a target njmber of increments, 
 % a set of waypoints, and if specified, a set of wayvelocities.
-count = 0
+
 % Determine the resolution of the delta increment
 str_x = num2str(delta_increment);
 decimal_position = strfind(str_x, '.');
@@ -83,10 +83,7 @@ for idx = 2:length(waypoints)
                 else
                     current_acceleration = -current_acceleration;
                 end
-                count = count +1
-                if count == 142
-                    ajax = 0;
-                end
+
                 temp_xdesired(eqt, jdx) = 0.5*current_acceleration*delta_increment^2 + v_prev*delta_increment + x_prev;
                 temp_xdesired(eqt+3, jdx) = current_acceleration*delta_increment + v_prev;
     

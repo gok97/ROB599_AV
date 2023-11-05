@@ -9,10 +9,10 @@ dt = 0.01;
 % Define the waypoints
 waypoints = [0, 0, 0;
             0, 0, 30;
-            10, 10, 30;
-            90, 90, 30;
+            50, 50, 30;
             100, 100, 30;
-            100, 100, 0.5];
+            150, 150, 30;
+            150, 150, 0.5];
 
 velocities = [0, 0, 0;
             0, 0, 0;
@@ -74,7 +74,7 @@ for idx = 1:n_samples
     if idx < n_start
         m_ramp(idx, 1) = m0+mdrop;
     elseif idx < n_end
-        m_ramp(idx, 1) = m0+mdrop-(mdrop/n_delta*idx);
+        m_ramp(idx, 1) = m0+mdrop-(mdrop/n_delta*(idx-n_start));
     else
         m_ramp(idx, 1) = m0;
     end
@@ -90,20 +90,20 @@ for idx = 1:n_samples
 
     % Generate the wind matrix for a step
     if idx < n_step 
-        w_step(idx, 1:3) = [wind_0*sqrt(2), wind_0*sqrt(2), 0];
+        w_step(idx, 1:3) = [wind_0/sqrt(2), wind_0/sqrt(2), 0];
     elseif idx < n_step + 1
-        w_step(idx, 1:3) = [(wind_0+wind_extra)*sqrt(2), (wind_0+wind_extra)*sqrt(2), 0];
+        w_step(idx, 1:3) = [(wind_0+wind_extra)/sqrt(2), (wind_0+wind_extra)/sqrt(2), 0];
     else
-        w_step(idx, 1:3) = [wind_0*sqrt(2), wind_0*sqrt(2), 0];
+        w_step(idx, 1:3) = [wind_0/sqrt(2), wind_0/sqrt(2), 0];
     end
 
     % Generate the wind matrix for a ramp
     if idx < n_start
-        w_ramp(idx, 1:3) = [wind_0*sqrt(2), wind_0*sqrt(2), 0];
+        w_ramp(idx, 1:3) = [wind_0/sqrt(2), wind_0/sqrt(2), 0];
     elseif idx < n_end
-        w_ramp(idx, 1:3) = [(wind_0+wind_extra/n_delta*(idx-n_start))*sqrt(2), (wind_0+wind_extra/n_delta*(idx-n_start))*sqrt(2), 0];
+        w_ramp(idx, 1:3) = [(wind_0+wind_extra/n_delta*(idx-n_start))/sqrt(2), (wind_0+wind_extra/n_delta*(idx-n_start))/sqrt(2), 0];
     else
-        w_ramp(idx, 1:3) = [(wind_0+wind_extra)*sqrt(2), (wind_0+wind_extra)*sqrt(2), 0];
+        w_ramp(idx, 1:3) = [(wind_0+wind_extra)/sqrt(2), (wind_0+wind_extra)/sqrt(2), 0];
     end
 
     % Generate the wind matrix for a the random scenario
