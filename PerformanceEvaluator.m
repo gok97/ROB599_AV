@@ -12,7 +12,7 @@ function metrics = PerformanceEvaluator(mode, n_event, threshold, dt, xDesired, 
     delta_relevant = delta(:, n_event:end);
 
     % Determine when the system reaches steady state
-    for jdx = 3:length(delta_relevant)-3
+    for jdx = 3:length(delta_relevant)-2
         if delta_relevant(jdx) < threshold && delta_relevant(jdx-1) && delta_relevant(jdx-2) && delta_relevant(jdx+1) && delta_relevant(jdx+3)
             n_stable = jdx;
             break;
