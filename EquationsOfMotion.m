@@ -2,9 +2,9 @@
 function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = EquationsOfMotion(state, input, eom_params)
     % extract eom params
     constants = eom_params{1};
-    current_time = eom_params{2};
-    mass_type = eom_params{3};
-    wind_type = eom_params{4};
+    current_index = eom_params{2};
+    mass = eom_params{3};
+    wind = eom_params{4};
     symbolic = eom_params{5};
     debug = eom_params{6};
 
@@ -35,11 +35,18 @@ function [tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3] = Equation
         ka = constants(16);
         m = constants(17);
         g = constants(18);
-        [m, Ix, Iy, Iz] = get_mass(constants, current_time, mass_type);
-        % m = mass_constants(1);
-        % Ix = mass_constants(2);
-        % Iy = mass_constants(3);
-        % Iz = mass_constants(4);
+
+        % [m, Ix, Iy, Iz] = get_mass(constants, current_time, mass_type);
+        % extract mass constants
+        m = mass(current_index, 1);
+        Ix = mass(current_index, 2);
+        Iy = mass(current_index, 3);
+        Iz = mass(current_index, 4);
+        
+        % extract wind constants
+        xdot_w = wind(current_index, 1);
+        ydot_w = wind(current_index, 2);
+        zdot_w = wind(current_index, 3);
     end
 
     x = state(1);

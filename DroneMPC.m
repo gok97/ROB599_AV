@@ -10,7 +10,9 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, Uprev, t
         Xbar =  parameters{4};
         Ubar =  parameters{5};
         Xref =  parameters{6}(time_index:(time_index + horizon - 1), :);
+        Xref = create_valid_horizon(Xref, horizon);
         Uref =  parameters{7}(time_index:(time_index + horizon - 2), :);
+        Uref = create_valid_horizon(Uref, horizon);
         dt = parameters{10};
         eom_params = parameters{11};
 
@@ -39,8 +41,8 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, Uprev, t
         % Define the dynamics and control constraints
         for i = 1:(horizon-1)
             % update mpc time
-            mpc_time = (time_index + i) * dt;
-            eom_params{2} = mpc_time;
+            mpc_index = time_index + i;
+            eom_params{2} = mpc_index;
             % dynamics constraints
             Xbar + delta_X(i+1, :) == rk4(Xbar, Ubar, dt, eom_params)  + delta_X(i, :)*A' + delta_U(i, :)*B';
             % control input constraints
@@ -55,4 +57,16 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, Uprev, t
     
     % Compute the desired output
     control_input = Ubar + delta_U(1, :);
+end
+
+function new_ref = create_valid_horizon(ref, horizon)
+    if length(ref) == horizon
+        new_ref = ref;
+    else
+        last_val = ref(1, :);
+        new_ref = [ref];
+        for i = 1:(length(ref)-horizon)
+            new_ref = [new_ref; last_val];
+        end
+    end
 end
