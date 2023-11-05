@@ -4,7 +4,7 @@ clc
 
 %% Settings
 % Time interval
-dt = 0.01;
+dt = 0.05;
 
 % Define the waypoints
 waypoints = [0, 0, 0;
@@ -113,10 +113,19 @@ for idx = 1:n_samples
 end
 
 %% Save to files
-save("trajectory.mat", "trajectory_Vset")
-save("mass_step.mat", "m_step")
-save("mass_ramp.mat", "m_ramp")
-save("wind_step.mat", "w_step")
-save("wind_ramp.mat", "w_ramp")
-save("wind_random.mat", "w_random")
+xDesired = trajectory_Vset;
+save("trajectory.mat", "xDesired")
+mass_matrix = m_step;
+save("mass_step.mat", "mass_matrix")
+mass_matrix = m_ramp;
+save("mass_ramp.mat", "mass_matrix")
+wind_matrix = w_step;
+save("wind_step.mat", "wind_matrix")
+wind_matrix = w_ramp;
+save("wind_ramp.mat", "wind_matrix")
+wind_matrix = w_random;
+save("wind_random.mat", "wind_matrix")
+
+increment_index = [n_step, n_start, n_end];
+save("increment_index.mat", "increment_index")
 
