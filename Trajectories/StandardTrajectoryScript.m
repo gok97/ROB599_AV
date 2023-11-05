@@ -32,7 +32,6 @@ Iz0 = 0.0173188;
 % Define the mass decrease due to payload release
 mdrop = 1.5*m0;
 
-
 % Define the average wind speed experienced by the quadrotor
 wind_0 = 7;
 
@@ -55,6 +54,13 @@ n_samples = length(trajectory_Vset);
 [~, n_start] = min(pdist2(xyz_start, trajectory_Vset(1:3, :)'));
 [~, n_end] = min(pdist2(xyz_end, trajectory_Vset(1:3, :)'));
 n_delta = n_end - n_start;
+
+% Understand the indices of when the waypoints are reached
+for wp = 1:length(waypoints) 
+    wp_complete = [waypoints(wp, :), velocities(wp, :)];
+    [~, n_wp] = min(pdist2(wp_complete, trajectory_Vset(1:6, :)'));
+    index_list(wp) = n_wp;
+end
 
 %% Generate the associated mass matrices
 for idx = 1:n_samples
@@ -128,4 +134,7 @@ save("wind_random.mat", "wind_matrix")
 
 increment_index = [n_step, n_start, n_end];
 save("increment_index.mat", "increment_index")
+
+waypoint_list = {waypoints, velocities, constant_conditions, index_list};
+save("waypoint_list.mat", "waypoint_list")
 
