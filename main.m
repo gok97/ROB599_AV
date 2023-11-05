@@ -1,23 +1,20 @@
-function main()
-    setup_workspace();
-    plot_bool = 1;
-    % mass_type = "constant";
-    % wind_type = "none";
-    trajectory_info = load_trajectory_info(false);
+function main(xDesired, mass_ramp, wind_ramp, horizon)
+    % setup_workspace();
+    plot_bool = 0;
+    % trajectory_info = load_trajectory_info(true);
     
     % extract trajectory info
-    xDesired = trajectory_info{1};
-    % xDesired = get_reference_trajectory(250, 0.05);
-    increment_indices = trajectory_info{2};
-    mass_step = trajectory_info{3};
-    mass_ramp = trajectory_info{4};
-    wind_ramp = trajectory_info{5};
-    wind_step = trajectory_info{6};
-    wind_random = trajectory_info{7};
+    % xDesired = trajectory_info{1};
+    % % xDesired = get_reference_trajectory(50, 0.1);
+    % increment_indices = trajectory_info{2};
+    % mass_step = trajectory_info{3};
+    % mass_ramp = trajectory_info{4};
+    % wind_ramp = trajectory_info{5};
+    % wind_step = trajectory_info{6};
+    % wind_random = trajectory_info{7};
 
-    % [A, B, mpc_params] = initialize_params(xDesired, ones(length(mass_step), 1)*mass_step(1, :), zeros(size(wind_step)));
-    [A, B, mpc_params] = initialize_params(xDesired, mass_step, wind_step);
-    [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params);
+    [XU0, mpc_params] = initialize_params(xDesired, mass_ramp, wind_ramp, horizon);
+    [Xsim, Usim] = sim_linear_mpc(XU0, mpc_params);
 
     if (plot_bool == 1)
         plot_mpc_traj(Xsim, mpc_params);
@@ -35,29 +32,7 @@ function setup_workspace()
     cvxfile()
 end
 
-function [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params, XU0)
-    % discretize continuous system
-    next_state = rk4(state, input, dt, eom_params);
-    tk1 = next_state(1);
-    tk2 = next_state(2);
-    tk3 = next_state(3);
-    td1 = next_state(4);
-    td2 = next_state(5);
-    td3 = next_state(6);
-    rk1 = next_state(7);
-    rk2 = next_state(8);
-    rk3 = next_state(9);
-    rd1 = next_state(10);
-    rd2 = next_state(11);
-    rd3 = next_state(12);
-
-    % Compute the jacobians
-    [A, B] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3, XU0, false);
-    A = double(A);
-    B = double(B);
-end
-
-function [A, B, mpc_params] = initialize_params(xDesired, mass, wind)
+function [XU0, mpc_params] = initialize_params(xDesired, mass, wind, horizon)
     %% Set Variables
     % mass_type = "constant";
     % wind_type = "none";
@@ -111,13 +86,13 @@ function [A, B, mpc_params] = initialize_params(xDesired, mass, wind)
     % current_index = 1;
     % eom_params{2} = current_index;
 
-    [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params, XU0);
+    % [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params, XU0);
 
     % Define the MPC parameters
     nx = 12;
     nu = 4;
-    N = 250;
-    horizon = 40;
+    N = length(xDesired);
+    % horizon = 40;
     X0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     Xbar = X0;
     Ubar = [u_hover, u_hover, u_hover, u_hover];
@@ -147,41 +122,6 @@ function Xref = get_reference_trajectory(N, dt)
 
     for i = 1:(N-1)
         Xref(i,4:6) = (Xref(i+1,1:3) - Xref(i, 1:3))/dt;
-    end
-end
-
-function trajectory_info = load_trajectory_info(plot_bool)
-    % load trajectory info
-    xDesired = load("Trajectories\trajectory.mat").xDesired';
-    % load increment indices info
-    increment_index = load("Trajectories\increment_index.mat").n_summary;
-    % load mass info 
-    mass_step = load("Trajectories\mass_step.mat").mass_matrix;
-    mass_ramp = load("Trajectories\mass_ramp.mat").mass_matrix;
-    % load wind info
-    wind_ramp = load("Trajectories\wind_ramp.mat").wind_matrix;
-    wind_step = load("Trajectories\wind_step.mat").wind_matrix;
-    wind_random = load("Trajectories\wind_random.mat").wind_matrix;
-    
-    trajectory_info = {xDesired, increment_index, mass_step, mass_ramp, wind_ramp, wind_step, wind_random};
-    plot_data = {xDesired(1, :), xDesired(2, :), xDesired(3, :), xDesired(4, :), xDesired(5, :), xDesired(6, :), wind_step(:, 1), wind_step(:, 2), mass_step(:, 1), wind_ramp(:, 1), wind_ramp(:, 2), mass_ramp(:, 1)};
-    tot_inc = 0.01;
-    T_series = 0:tot_inc:(length(plot_data{1})-1)*tot_inc;
-    
-    if plot_bool
-        labels = ["X (m)", "Y (m)", "Z (m)", "Xdot (m/s)", "Ydot (m/s)", "Zdot (m/s)", "X Wind (m/s)", "Y Wind (m/s)", "Mass (Kg)", "X Wind (m/s)", "Y Wind (m/s)", "Mass (Kg)"];        
-        for i = 1:12
-            % Create a subplot in the ith position
-            subplot(4, 3, i);
-        
-            % Create the line plot for the target and actual cases
-            plot(T_series, plot_data{i});
-        
-            % Add titles or labels as needed
-            xlabel('Time (s)');
-            ylabel(labels(i));
-        end
-        hold off
     end
 end
 

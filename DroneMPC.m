@@ -10,9 +10,11 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, Uprev, t
         Xbar =  parameters{4};
         Ubar =  parameters{5};
         % Xref =  parameters{6}(time_index:(time_index + horizon - 1), :);
-        Xref = create_valid_horizon(parameters{6}, time_index, horizon, "Xref");
+        % Xref = create_valid_horizon(parameters{6}, time_index, horizon, "Xref");
+        Xref = QuadrotorReferenceReader(time_index, time_index + horizon - 1, parameters{6});
         % Uref =  parameters{7}(time_index:(time_index + horizon - 2), :);
-        Uref = create_valid_horizon(parameters{7}, time_index, horizon, "Uref");
+        % Uref = create_valid_horizon(parameters{7}, time_index, horizon, "Uref");
+        Uref = QuadrotorReferenceReader(time_index, time_index + horizon - 2, parameters{7});
         dt = parameters{10};
         eom_params = parameters{11};
         N = length(parameters{6});
@@ -84,3 +86,24 @@ function new_ref = create_valid_horizon(ref_array, time_index, horizon, ref_name
     end    
 
 end
+
+%% Define the function that parses the waypoints safely
+function xDesired = QuadrotorReferenceReader(start, finish, reference)
+
+if finish > length(reference)
+    % Index the array
+    xDesired = reference(start:end,:);    
+    current_len = size(xDesired, 1);
+
+    % Add rows if necessary
+    while current_len < (finish-start+1)
+        
+        xDesired(current_len + 1, :) = xDesired(end,:);
+        current_len = current_len + 1;
+    end
+else
+    xDesired = reference(start:finish,:);    
+end
+    %disp(xDesired)
+end
+

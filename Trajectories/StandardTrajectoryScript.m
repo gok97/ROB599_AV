@@ -41,9 +41,9 @@ wind_extra = 3;
 wind_time = 3;
 
 % Define when the step and ramp should be triggered
-xyz_drop = [50, 50, 30];
-xyz_start = [15, 15, 30];
-xyz_end = [85, 85, 30];
+xyz_drop = [75, 75, 30];
+xyz_start = [60, 60, 30];
+xyz_end = [90, 90, 30];
 
 %% Generate the necessary trajectories
 % Generate the trajectory
