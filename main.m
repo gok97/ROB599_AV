@@ -7,7 +7,7 @@ function main()
     
     % extract trajectory info
     xDesired = trajectory_info{1};
-    xDesired = get_reference_trajectory(100, 0.05);
+    % xDesired = get_reference_trajectory(250, 0.05);
     increment_indices = trajectory_info{2};
     mass_step = trajectory_info{3};
     mass_ramp = trajectory_info{4};
@@ -15,7 +15,8 @@ function main()
     wind_step = trajectory_info{6};
     wind_random = trajectory_info{7};
 
-    [A, B, mpc_params] = initialize_params(xDesired, ones(length(mass_step), 1)*mass_step(1, :), zeros(size(wind_step)));
+    % [A, B, mpc_params] = initialize_params(xDesired, ones(length(mass_step), 1)*mass_step(1, :), zeros(size(wind_step)));
+    [A, B, mpc_params] = initialize_params(xDesired, mass_step, wind_step);
     [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params);
 
     if (plot_bool == 1)
@@ -83,28 +84,6 @@ function [A, B, mpc_params] = initialize_params(xDesired, mass, wind)
     w_y = wind(1, 2);
     w_z = wind(1, 3);
 
-    % switch mass_type
-    %    case "constant"
-    %        m = m0;
-    %        Ix = Ix0;
-    %        Iy = Iy0;
-    %        Iz = Iz0;
-    % 
-    %    case "symbolic"
-    %        syms Ix Iy Iz m
-    % end
-
-    % Define Wind
-    % switch wind_type
-    %     case "none"
-    %         w_x = 0;
-    %         w_y = 0;
-    %         w_z = 0;
-    % 
-    %     case "symbolic"
-    %        syms w_x w_y w_z
-    % end
-
     % define simulation constants
     K = [Ix0, Iy0, Iz0, 0.01, 0.01, 0.045, 0.1, 0.1, 0.1, w_x, w_y, w_z, 0.23, 1.0, (7.5*(10^-7))/(3.13*(10^-5)), 1.0, m0, 9.81]';
 
@@ -117,8 +96,21 @@ function [A, B, mpc_params] = initialize_params(xDesired, mass, wind)
     symbolic = true;
     debug = false;
     eom_params = {K, current_index, mass, wind, symbolic, debug};
-
+    
     % Discrerize continuous system and compute jacobians
+    % z_coordinates = xDesired(:, 3);
+    % for i = 1:length(z_coordinates)
+    %     XU0(3) = z_coordinates(i);
+    %     [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params, XU0);
+    %     A_all{i} = A;
+    %     B_all{i} = B;
+    %     current_index = current_index + 1;
+    %     eom_params{2} = current_index;
+    %     disp(i)
+    % end
+    % current_index = 1;
+    % eom_params{2} = current_index;
+
     [A, B] = discretize_and_compute_jacobians(state, input, dt, eom_params, XU0);
 
     % Define the MPC parameters

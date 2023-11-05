@@ -47,11 +47,11 @@ function control_input = DroneMPC(A, B, parameters, initial_conditions, Uprev, t
             % dynamics constraints
             Xbar + delta_X(i+1, :) == rk4(Xbar, Ubar, dt, eom_params)  + delta_X(i, :)*A' + delta_U(i, :)*B';
             % control input constraints
-            Ubar + delta_U(i, :) <= Ubar*5;
-            Ubar + delta_U(i, :) >= 0.0;
-            Ubar + delta_U(i, :) - Uprev >= -Ubar*5;
-            Ubar + delta_U(i, :) - Uprev <= (Ubar*5) / 2;
-            Uprev = Ubar + delta_U(i, :);
+            % Ubar + delta_U(i, :) <= Ubar*5;
+            % Ubar + delta_U(i, :) >= 0.0;
+            % Ubar + delta_U(i, :) - Uprev >= -Ubar*5;
+            % Ubar + delta_U(i, :) - Uprev <= (Ubar*5) / 2;
+            % Uprev = Ubar + delta_U(i, :);
         end
 
     cvx_end

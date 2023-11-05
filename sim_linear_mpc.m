@@ -5,7 +5,7 @@ function [Xsim, Usim] = sim_linear_mpc(A, B, mpc_params)
     eom_params = mpc_params{11};
     % Execute the simulation
     Xref = mpc_params{6};
-    N_sim = 50; %length(Xref);
+    N_sim = 216; %length(Xref);
     Xsim = [X0];
     Usim = [];
     for i = 1:N_sim
