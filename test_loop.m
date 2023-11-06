@@ -1,3 +1,4 @@
+% Prepare Workspace
 clc;
 clear;
 
@@ -12,18 +13,43 @@ wind_ramp = trajectory_info{5};
 wind_step = trajectory_info{6};
 wind_random = trajectory_info{7};
 
-% Create list of parameters to loop over
-all_mass = {mass_step, mass_ramp};
-all_wind = {wind_step, wind_ramp};
-pw_list = [5, 10, 15, 20, 25];
+% create constant mass and constant wind matrices
+mass_constant = zeros(469, 4);
+mass_constant(:, 1) = 0.65;
+mass_constant(:, 2) = 0.0087408;
+mass_constant(:, 3) = 0.0087408;
+mass_constant(:, 4) = 0.0173188;
 
-for m_idx = 1:1
-    for w_idx = 1:1
-        for pw_idx = 1:1
-            main(xDesired, all_mass{m_idx}, all_wind{w_idx}, pw_list(pw_idx));
-        end
+wind_constant = zeros(469, 3);
+wind_constant(:, 1) = 7/sqrt(2);
+wind_constant(:, 2) = 7/sqrt(2);
+
+% Create list of parameters to loop over
+all_mass = {mass_ramp, mass_step, mass_constant, mass_constant};
+all_wind = {wind_constant, wind_constant, wind_ramp, wind_step};
+pw_list = [5, 10, 15, 20, 25];
+dt = 0.05;
+
+condition = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.map", "wind_step.mat"];
+
+for cond_idx = 3:4
+    for pw_idx = 2:5
+        tic
+        [Xsim, Usim] = main(xDesired, all_mass{cond_idx}, all_wind{cond_idx}, pw_list(pw_idx));
+        
+        % save results
+        current_fname = "L_Cond" + condition(cond_idx) + "_Pw" + pw_list(pw_idx) + "_Hz1"
+        end_time = toc;
+        Ttot = (length(xDesired)-1)*dt;
+        pw = pw_list(pw_idx);
+        hz = 1;
+        metadata = [end_time, pw, hz, dt, Ttot, condition(cond_idx)]
+        save(current_fname + "_xHistory.mat", "Xsim")
+        save(current_fname + "_uHistory.mat", "Usim")
+        save(current_fname + "_metadata.mat", "metadata")
     end
 end
+
 
 function trajectory_info = load_trajectory_info(plot_bool)
     % load trajectory info

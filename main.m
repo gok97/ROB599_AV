@@ -1,19 +1,8 @@
-function main(xDesired, mass_ramp, wind_ramp, horizon)
+function [Xsim, Usim] = main(xDesired, mass, wind, horizon)
     % setup_workspace();
     plot_bool = 0;
-    % trajectory_info = load_trajectory_info(true);
-    
-    % extract trajectory info
-    % xDesired = trajectory_info{1};
-    % % xDesired = get_reference_trajectory(50, 0.1);
-    % increment_indices = trajectory_info{2};
-    % mass_step = trajectory_info{3};
-    % mass_ramp = trajectory_info{4};
-    % wind_ramp = trajectory_info{5};
-    % wind_step = trajectory_info{6};
-    % wind_random = trajectory_info{7};
 
-    [XU0, mpc_params] = initialize_params(xDesired, mass_ramp, wind_ramp, horizon);
+    [XU0, mpc_params] = initialize_params(xDesired, mass, wind, horizon);
     [Xsim, Usim] = sim_linear_mpc(XU0, mpc_params);
 
     if (plot_bool == 1)
@@ -21,22 +10,8 @@ function main(xDesired, mass_ramp, wind_ramp, horizon)
     end
 end
 
-function setup_workspace()
-    %% Prepare workspace
-    clear all
-    clc
-    close all
-
-    % Load cvx optimizer
-    % cvx_setup()
-    cvxfile()
-end
 
 function [XU0, mpc_params] = initialize_params(xDesired, mass, wind, horizon)
-    %% Set Variables
-    % mass_type = "constant";
-    % wind_type = "none";
-
     % Define the simulation interval
     dt = 0.05;
 
@@ -96,7 +71,9 @@ function [XU0, mpc_params] = initialize_params(xDesired, mass, wind, horizon)
     X0 = [0, 0, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     Xbar = X0;
     Ubar = [u_hover, u_hover, u_hover, u_hover];
-    Q = 10*eye(nx);
+    Q = 1*eye(nx);
+    % Q = diag([1*ones(6, 1); 0.0001*ones(6, 1)]);
+
     R = 0.1*eye(nu);
 
     % Define the reference trajectory
