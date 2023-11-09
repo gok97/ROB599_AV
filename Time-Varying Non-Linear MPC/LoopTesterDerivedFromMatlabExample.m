@@ -4,25 +4,27 @@ clc
 
 %% Setup loop variables
 pw_list = [5, 10, 15, 20, 25];
-hz_list = [1, 2, 3, 4, 5];
-condition = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.map", "wind_step.mat"];
+hz_list = [2, 3, 4, 5];
+pw_list = [15];
+hz_list = [2];
+condition = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.mat", "wind_step.mat"];
 
 for cond_idx = 1:4
     if cond_idx < 3
-        wind_matrix = zeros(319,3);
+        wind_matrix = zeros(769,3);
         wind_matrix(:, 1) = 7/sqrt(2);
         wind_matrix(:, 2) = 7/sqrt(2);
     else
-        mass_matrix = zeros(319,4);
+        mass_matrix = zeros(769,4);
         mass_matrix(:, 1) = 0.65;
         mass_matrix(:, 2) = 0.0087408;
         mass_matrix(:, 3) = 0.0087408;
         mass_matrix(:, 4) = 0.0173188;
     end
 
-    for pw_idx = 1:5
+    for pw_idx = 1
     
-        for hz_idx = 1:5
+        for hz_idx = 1
 
             current_fname = "NL_Cond" + condition(cond_idx) + "_Pw" + pw_list(pw_idx) + "_Hz" + hz_list(hz_idx)
             %% Set the problem variables
@@ -67,7 +69,7 @@ for cond_idx = 1:4
             mv = nloptions.MVTarget;
             
             % Display waitbar to show simulation progress
-            hbar = waitbar(0,"Simulation Progress");
+            % hbar = waitbar(0,"Simulation Progress");
             
             % MV last value is part of the controller state
             lastMV = mv;
@@ -118,7 +120,7 @@ for cond_idx = 1:4
                         );
                     
                     % Define the weights for the non-linear MPC
-                    nlmpcobj.Weights.OutputVariables = [1 1 1 0 0 0 1 1 1 0 0 0]; % Define the output variables to be tracked
+                    nlmpcobj.Weights.OutputVariables = [1 1 1 1 1 1 1 1 1 1 1 1]; % Define the output variables to be tracked
                     nlmpcobj.Weights.ManipulatedVariables = [MV_penalty MV_penalty MV_penalty MV_penalty];
                     nlmpcobj.Weights.ManipulatedVariablesRate = [MVrate_penallty MVrate_penallty MVrate_penallty MVrate_penallty];
                 % END OF NEW MODEL PREPARATION
@@ -139,7 +141,7 @@ for cond_idx = 1:4
                 xHistory(k+1,:) = XOUT(end,:);
             
                 % Update waitbar
-                waitbar(k*dt/Ttot,hbar);
+                % waitbar(k*dt/Ttot,hbar);
                 disp("Current Iteration: " + k +" out of " + length(xDesired))
             end
             
@@ -147,7 +149,7 @@ for cond_idx = 1:4
             end_time = toc;
             
             % Close waitbar 
-            close(hbar)
+            % close(hbar)
             
             %% Save results
             metadata = [end_time, pw, hz, dt, Ttot, condition(cond_idx)];

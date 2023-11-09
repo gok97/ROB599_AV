@@ -3,11 +3,13 @@ clear
 clc
 
 %% Data processing loop variables
-pw_list = [10, 15, 20, 25, 30];
-hz_list = [1, 2, 3, 4, 5];
-condition = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.map", "wind_step.mat"];
+pw_list = [5, 10, 15, 20, 25];
+hz_list = [2, 3, 4, 5];
+condition = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.mat", "wind_step.mat"];
 labels = ["Mass Ramp Input", "Mass Step Input", "Wind Ramp Input", "Wind Step Input"];
 load("increment_index.mat")
+results_path = "C:\Users\feder\OneDrive\Desktop\03 Academics\03 Graduate Education\ROB599\ROB599_AV\Time-Varying Non-Linear MPC\Results\";
+summary_metric = zeros(4, 5);
 
 for cond_idx = 1:4
 
@@ -18,10 +20,10 @@ for cond_idx = 1:4
 
     for pw_idx = 1:5
     
-        for hz_idx = 1:5
+        for hz_idx = 1:4
 
             % Load the relevant files
-            current_fname = "NL_Cond" + condition(cond_idx) + "_Pw" + pw_list(pw_idx) + "_Hz" + hz_list(hz_idx)
+            current_fname = results_path + "NL_Cond" + condition(cond_idx) + "_Pw" + pw_list(pw_idx) + "_Hz" + hz_list(hz_idx)
             load("increment_index.mat")
             load("trajectory.mat")
             load(current_fname + "_xHistory.mat")
@@ -63,9 +65,9 @@ for cond_idx = 1:4
     counter = 1;
     for pw_idx = 1:5
     
-        for hz_idx = 1:5
+        for hz_idx = 1:4
             error_metric(hz_idx,pw_idx) = (normalized_data(counter, 1) + normalized_data(counter, 2) + normalized_data(counter, 3) )/3;
-            time_error_metric(hz_idx, pw_idx) = (normalized_data(counter, 1) + normalized_data(counter, 2) + normalized_data(counter, 3) + 1.5*normalized_data(counter, 4))/4.5;
+            time_error_metric(hz_idx, pw_idx) = (normalized_data(counter, 1) + normalized_data(counter, 2) + normalized_data(counter, 3) + 3*normalized_data(counter, 4))/6;
 
             counter = counter + 1;
         end
@@ -73,14 +75,28 @@ for cond_idx = 1:4
     end
     
     % Plot
-    h = heatmap(time_error_metric);
+    h = heatmap(time_error_metric,'ColorLimits',[0 1]);
 
-    % Add axis labels and a title
-    xlabel('Control Window');
-    ylabel('Prediction Window');
-    h.XData = hz_list;
-    h.YData = pw_list;
-    title(labels(cond_idx));
-    pause()
-    temp_var = 0;
+    % % Add axis labels and a title
+    % xlabel('Prediction Window');
+    % ylabel('Control Window');
+    % h.XData = pw_list;
+    % h.YData = hz_list;
+    % title(labels(cond_idx));
+    % pause()
+    % temp_var = 0;
+
+    summary_metric = summary_metric + time_error_metric;
 end
+
+% Final Summary Plot
+h = heatmap(summary_metric./4);
+
+% Add axis labels and a title
+xlabel('Prediction Window');
+ylabel('Control Window');
+h.XData = pw_list;
+h.YData = hz_list;
+title("Average error");
+
+temp_var = 0;

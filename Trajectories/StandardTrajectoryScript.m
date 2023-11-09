@@ -10,18 +10,20 @@ dt = 0.05;
 waypoints = [0, 0, 0;
             0, 0, 30;
             50, 50, 30;
-            250, 250, 30;
             300, 300, 30;
-            300, 300, 0.5];
+            550, 550, 30;
+            600, 600, 30;
+            600, 600, 0.5];
 
 velocities = [0, 0, 0;
             0, 0, 0;
             20, 20, 0;
+            0, 0, 0;
             20, 20, 0;
             0, 0, 0;
             0, 0, 0];
 
-constant_conditions = [0, 0, 1, 0, 0];
+constant_conditions = [0, 0, 0, 0, 0, 0];
 
 % Define system mass w/o payload
 m0 = 0.65;
@@ -40,9 +42,9 @@ wind_extra = 3;
 wind_time = 3;
 
 % Define when the step and ramp should be triggered
-xyz_drop = [150, 150, 30];
-xyz_start = [100, 100, 30];
-xyz_end = [200, 200, 30];
+xyz_drop = [300, 300, 30];
+xyz_start = [200, 200, 30];
+xyz_end = [400, 400, 30];
 
 %% Generate the necessary trajectories
 % Generate the trajectory
@@ -72,8 +74,8 @@ for idx = 1:n_samples
         m_step(idx, 1) = m0;
     end
     
-    m_step(idx, 2) = Ix0 + 0.00040757*(m_step(idx, 1)-m0);
-    m_step(idx, 3) = Iy0 +0.00040757*(m_step(idx, 1)-m0);
+    m_step(idx, 2) = Ix0 + 0.00083043*(m_step(idx, 1)-m0);
+    m_step(idx, 3) = Iy0 + 0.00083043*(m_step(idx, 1)-m0);
     m_step(idx, 4) = Iz0 + 0.00040757*(m_step(idx, 1)-m0);
 
     % Generate the mass matrix for a ramp
@@ -96,25 +98,26 @@ for idx = 1:n_samples
 
     % Generate the wind matrix for a step
     if idx < n_step 
-        w_step(idx, 1:3) = [wind_0/sqrt(2), wind_0/sqrt(2), 0];
+        w_step(idx, 1:3) = [-wind_0/sqrt(2), wind_0/sqrt(2), 0];
     elseif idx < n_step + 1
-        w_step(idx, 1:3) = [(wind_0+wind_extra)/sqrt(2), (wind_0+wind_extra)/sqrt(2), 0];
+        w_step(idx, 1:3) = [-(wind_0+wind_extra)/sqrt(2), (wind_0+wind_extra)/sqrt(2), 0];
     else
-        w_step(idx, 1:3) = [wind_0/sqrt(2), wind_0/sqrt(2), 0];
+        w_step(idx, 1:3) = [-wind_0/sqrt(2), wind_0/sqrt(2), 0];
     end
 
     % Generate the wind matrix for a ramp
     if idx < n_start
-        w_ramp(idx, 1:3) = [wind_0/sqrt(2), wind_0/sqrt(2), 0];
+        w_ramp(idx, 1:3) = [-wind_0/sqrt(2), wind_0/sqrt(2), 0];
     elseif idx < n_end
-        w_ramp(idx, 1:3) = [(wind_0+wind_extra/n_delta*(idx-n_start))/sqrt(2), (wind_0+wind_extra/n_delta*(idx-n_start))/sqrt(2), 0];
+        w_ramp(idx, 1:3) = [-(wind_0+wind_extra/n_delta*(idx-n_start))/sqrt(2), (wind_0+wind_extra/n_delta*(idx-n_start))/sqrt(2), 0];
     else
-        w_ramp(idx, 1:3) = [(wind_0+wind_extra)/sqrt(2), (wind_0+wind_extra)/sqrt(2), 0];
+        w_ramp(idx, 1:3) = [-(wind_0+wind_extra)/sqrt(2), (wind_0+wind_extra)/sqrt(2), 0];
     end
 
     % Generate the wind matrix for a the random scenario
-    rand_angle = randi([30, 60]);
-    w_random(idx, 1:3) = [(wind_0+wind_extra/2*rand)*cosd(rand_angle), (wind_0+wind_extra/2*rand)*sind(rand_angle), 0];
+    rand_angle = (45 + 5 * randn(1, 1));
+    rand_wind = 7 + 1 * randn(1, 1);
+    w_random(idx, 1:3) = [-(rand_wind)*cosd(rand_angle), (rand_wind)*sind(rand_angle), 0];
 
 end
 

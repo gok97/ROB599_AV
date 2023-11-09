@@ -18,9 +18,21 @@ video_mode = "follow";
 
 % Disturbance settings
 load("trajectory.mat")
-load("mass_step.mat")
-load("wind_ramp.mat")
 xDesired = xDesired';
+cond_idx = 3;
+condition_list = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.mat", "wind_step.mat"];
+if cond_idx < 3
+    wind_matrix = zeros(769,3);
+    wind_matrix(:, 1) = 7/sqrt(2);
+    wind_matrix(:, 2) = 7/sqrt(2);
+else
+    mass_matrix = zeros(769,4);
+    mass_matrix(:, 1) = 0.65;
+    mass_matrix(:, 2) = 0.0087408;
+    mass_matrix(:, 3) = 0.0087408;
+    mass_matrix(:, 4) = 0.0173188;
+end
+load(condition_list(cond_idx));
 
 Ttot = (length(xDesired)-1)*dt;
 T_series = 0:dt:Ttot;
@@ -97,7 +109,7 @@ for k = 1:(Ttot/dt)
             );
         
         % Define the weights for the non-linear MPC
-        nlmpcobj.Weights.OutputVariables = [1 1 1 0 0 0 1 1 1 0 0 0]; % Define the output variables to be tracked
+        nlmpcobj.Weights.OutputVariables = [1 1 1 1 1 1 1 1 1 1 1 1]; % Define the output variables to be tracked
         nlmpcobj.Weights.ManipulatedVariables = [MV_penalty MV_penalty MV_penalty MV_penalty];
         nlmpcobj.Weights.ManipulatedVariablesRate = [MVrate_penallty MVrate_penallty MVrate_penallty MVrate_penallty];
     % END OF NEW MODEL PREPARATION
