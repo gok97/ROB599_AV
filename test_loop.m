@@ -14,13 +14,13 @@ wind_step = trajectory_info{6};
 wind_random = trajectory_info{7};
 
 % create constant mass and constant wind matrices
-mass_constant = zeros(469, 4);
+mass_constant = zeros(769, 4);
 mass_constant(:, 1) = 0.65;
 mass_constant(:, 2) = 0.0087408;
 mass_constant(:, 3) = 0.0087408;
 mass_constant(:, 4) = 0.0173188;
 
-wind_constant = zeros(469, 3);
+wind_constant = zeros(769, 3);
 wind_constant(:, 1) = 7/sqrt(2);
 wind_constant(:, 2) = 7/sqrt(2);
 
@@ -32,8 +32,8 @@ dt = 0.05;
 
 condition = ["mass_ramp.mat", "mass_step.mat", "wind_ramp.map", "wind_step.mat"];
 
-for cond_idx = 3:4
-    for pw_idx = 2:5
+for cond_idx = 1:4
+    for pw_idx = 5:5
         tic
         [Xsim, Usim] = main(xDesired, all_mass{cond_idx}, all_wind{cond_idx}, pw_list(pw_idx));
         
