@@ -1,14 +1,14 @@
 %% Define the linearization function
-function [A_general, B_general] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3, equilibrium, debug)
+function [A, B] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, rk2, rk3, rd1, rd2, rd3, equilibrium, debug)
     
     % Define the symbolic variables
-    syms dt x y z u v w phi theta psy p q r 
+    syms x y z xdot ydot zdot phi theta psy p q r 
     
     % Define the inputs
     syms w1 w2 w3 w4
 
     % Calculate the jacobian
-    Ja = jacobian([tk1; tk2; tk3; td1; td2; td3; rk1; rk2; rk3; rd1; rd2; rd3], [x; y; z; u; v; w; phi; theta; psy; p; q; r ]);
+    Ja = jacobian([tk1; tk2; tk3; td1; td2; td3; rk1; rk2; rk3; rd1; rd2; rd3], [x; y; z; xdot; ydot; zdot; phi; theta; psy; p; q; r ]);
     Jb = jacobian([tk1; tk2; tk3; td1; td2; td3; rk1; rk2; rk3; rd1; rd2; rd3], [w1; w2; w3; w4 ]);
     
     % Print when debugging
@@ -20,12 +20,12 @@ function [A_general, B_general] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, 
 
     % Check if an equilibrium has been passed
     if isempty(equilibrium)
-        A_general = Ja;
-        B_general = Jb;
+        A = Ja;
+        B = Jb;
     else
         % Evaluate at equilibria
-        Ja_equilibrium = (subs(Ja, [x; y; z; u; v; w; phi; theta; psy; p; q; r; w1; w2; w3; w4], equilibrium));
-        Jb_equilibrium = (subs(Jb, [x; y; z; u; v; w; phi; theta; psy; p; q; r; w1; w2; w3; w4], equilibrium));
+        Ja_equilibrium = (subs(Ja, [x; y; z; xdot; ydot; zdot; phi; theta; psy; p; q; r; w1; w2; w3; w4], equilibrium));
+        Jb_equilibrium = (subs(Jb, [x; y; z; xdot; ydot; zdot; phi; theta; psy; p; q; r; w1; w2; w3; w4], equilibrium));
         
         % Print when debugging
         if debug == true
@@ -34,12 +34,9 @@ function [A_general, B_general] = Linearizer(tk1, tk2, tk3, td1, td2, td3, rk1, 
             disp(Jb_equilibrium)
         end
 
-        A_general = Ja_equilibrium;
-        B_general = Jb_equilibrium;
+        A = Ja_equilibrium;
+        B = Jb_equilibrium;
 
     end
 
-    % Convert the functions into function handles
-    A = matlabFunction(A_general, 'Vars', dt);
-    B = matlabFunction(B_general, 'Vars', dt);
 end
