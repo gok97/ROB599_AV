@@ -1,0 +1,37 @@
+function rrt_star_path_planner(omap3D, waypoints, safety_buffer)
+    % Define state space object 
+    ss = stateSpaceSE3([0   400;
+                        0   400;
+                        0   100;
+                        inf inf;
+                        inf inf;
+                        inf inf;
+                        inf inf]);
+    
+    % Add buffer region around the obstacles
+    inflate(omap3D, safety_buffer);
+
+    % Define State Validator Object
+    sv = validatorOccupancyMap3D(ss,Map=omap);
+    sv.ValidationDistance = 0.1;
+
+    % Set up RRT* Path Planner
+    planner = plannerRRTStar(ss,sv);
+    planner.MaxConnectionDistance = 50;
+    planner.GoalBias = 0.8;
+    planner.MaxIterations = 1000;
+    planner.ContinueAfterGoalReached = true;
+    planner.MaxNumTreeNodes = 10000;
+
+    %
+    startPose = [0 0 0 1 0 0 0];  % [x y z qw qx qy qz]
+    goalPose = [350 350 100 1 0 0 0];
+
+    % Execute path planning
+    [pthObj, solnInfo] = plan(planner,startPose,goalPose);
+
+    if (~solnInfo.IsPathFound)
+    disp("No Path Found by the RRT, terminating example")
+    return
+end
+end
