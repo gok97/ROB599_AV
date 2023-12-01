@@ -1,5 +1,5 @@
 % Function to safely read a provided trajectory
-function safeReferenceTrajectory = QuadrotorReferenceReader(startStep, finishStep, referenceTrajectory)
+function safeReferenceTrajectory = safe_reference(startStep, finishStep, referenceTrajectory)
     
     % If the demanded trajectory goes past the end of the reference one, duplicate the last row as required
     if finishStep > length(referenceTrajectory)
