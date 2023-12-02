@@ -2,14 +2,14 @@
 function [actualState, actualControl, endTime] = nlmpc_simulator(desiredState, referenceControl, matrixWind, matrixMass, controlConstants, modelConstants)
 
     % Extract constants to make the function more legible
-    dt = controlConstants(1);
+    dt = controlConstants{1};
     tTot = (length(desiredState)-1)*dt;
-    pw = controlConstants(2); 
-    hz = controlConstants(3);
-    controlLimits = controlConstants(10);
-    controlPenalty = controlConstants(4);
-    controlRatePenalty = controlConstants(5);
-    stateWeights = controlConstants(9);
+    pw = controlConstants{2}; 
+    hz = controlConstants{3};
+    controlLimits = controlConstants{10};
+    controlPenalty = controlConstants{4};
+    controlRatePenalty = controlConstants{5};
+    stateWeights = controlConstants{9};
     
     % Define a nominal control target to maintain the quadcopter hovering/stable
     nloptions = nlmpcmoveopt;
@@ -49,9 +49,9 @@ function [actualState, actualControl, endTime] = nlmpc_simulator(desiredState, r
             QuadcopterModel;
     
             % Define the non-linear mpc problem
-            nx = controlConstants(6);
-            ny = controlConstants(7);
-            nu = controlConstants(8);
+            nx = controlConstants{6};
+            ny = controlConstants{7};
+            nu = controlConstants{8};
             nlmpcobj = nlmpc(nx, ny, nu);
             
             % Associate the state and the jacobian functions with the problem

@@ -16,7 +16,7 @@ function safeReferenceTrajectory = safe_reference(startStep, finishStep, referen
         end
 
     else
-        safeReferenceTrajectory = referenceTrajectory(startStep:finishStep,:);    
+        safeReferenceTrajectory = referenceTrajectory(startStep:finishStep,:);
     end
 
 end

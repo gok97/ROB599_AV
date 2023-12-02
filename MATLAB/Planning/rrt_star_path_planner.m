@@ -1,5 +1,8 @@
 % Function to generate a high-level trajectory using RRT* bteween specified waypoints in a provided map
 function [plannerWaypoints] = rrt_star_path_planner(map, waypointsList, plannerConstants, stateSpaceLimits, safetyBuffer)
+    
+    % Set seed for repeatability
+    rng(100, "twister");
 
     % Augment waypoints with orientation (0 degrees of roll, pitch and yaw)
     waypointsList = [waypointsList repmat([1 0 0 0], size(waypointsList, 1), 1)];

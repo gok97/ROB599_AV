@@ -1,77 +1,74 @@
-%% Script to generate the state and jacobian functions starting from the equations of motion
+%% Script to gModelenerate the state and jacobian functions startingModel from the equations of motion
+% Extract constants to make the function more legible
+IxModel = modelConstants(1);
+IyModel = modelConstants(2);
+IzModel = modelConstants(3);
+AxModel = modelConstants(4);
+AyModel = modelConstants(5);
+AzModel = modelConstants(6);
+kdxModel = modelConstants(7);
+kdyModel = modelConstants(8);
+kdzModel = modelConstants(9);
+xdotWModel = modelConstants(10);
+ydotWModel = modelConstants(11);
+zdotWModel = modelConstants(12);
+lModel = modelConstants(13);
+kfModel = modelConstants(14);
+kmModel = modelConstants(15);
+kaModel = modelConstants(16);
+mModel = modelConstants(17);
+gModel = modelConstants(18);
 
-% Prepare the equations of motion
-    % Create variables
-    syms t Ix_sym Iy_sym Iz_sym Ax Ay Az kdx kdy kdz xdot_w ydot_w zdot_w l kf km ka m_sym g
-    
-    % Define the states
-    syms x(t) y(t) z(t) phi(t) theta(t) psy(t) p(t) q(t) r(t)
-    
-    % Define the state derivatives
-    xdot = diff(x, t);
-    ydot = diff(y, t);
-    zdot = diff(z, t);
+% Define the states
+syms t
+syms x(t) y(t) z(t) phi(t) theta(t) psy(t) p(t) q(t) r(t)
 
-    % Define the inputs
-    syms w1 w2 w3 w4
-    
-    % Define the equations
-    tk1_sym = xdot;
-    tk2_sym = ydot;
-    tk3_sym = zdot;
-    
-    td1_sym = ((kf*(w1^2 + w2^2 + w3^2 + w4^2))*(sin(phi(t))*sin(psy(t))+cos(phi(t))*sin(theta(t))*cos(psy(t))) - (ka*Ax*((xdot_w-xdot)^2)))/m_sym;
-    td2_sym = ((kf*(w1^2 + w2^2 + w3^2 + w4^2))*(-sin(phi(t))*cos(psy(t))+sin(psy(t))*sin(theta(t))*cos(phi(t)))  - (ka*Ay*((ydot_w-ydot)^2)))/m_sym;
-    td3_sym = (-m_sym*g + (kf*(w1^2 + w2^2 + w3^2 + w4^2))*(cos(phi(t))*cos(theta(t)))  - (ka*Az*((zdot_w-zdot)^2)))/m_sym;
+% Define the state derivatives
+xdot = diff(x, t);
+ydot = diff(y, t);
+zdot = diff(z, t);
 
-    rk1_sym = p + q*sin(phi(t))*tan(theta(t)) + r*cos(phi(t))*tan(theta(t));
-    rk2_sym = q*cos(phi(t)) - r*sin(phi(t));
-    rk3_sym = q*sin(phi(t))*sec(theta(t)) + r*cos(phi(t))*sec(theta(t));
-    
-    % rd1_sym = (-((Iz-Iy)*q*r) - q*(w1+w2+w3+w4) - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix; THIS IS WRONG
-    % rd2_sym = (-((Ix-Iz)*p*r) + p*(w1+w2+w3+w4) - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy; THIS IS WRONG
-    % rd3_sym = (-((Iy-Ix)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz; THIS IS WRONG
-    rd1_sym = (-((Iz_sym-Iy_sym)*q*r)  - kdx*p + l*kf*(-w1^2 - w2^2 + w3^2 + w4^2))/Ix_sym;
-    rd2_sym = (-((Ix_sym-Iz_sym)*p*r)  - kdy*q + l*kf*(-w1^2 + w2^2 + w3^2 - w4^2))/Iy_sym;
-    rd3_sym = (-((Iy_sym-Ix_sym)*p*q) - kdz*r + km*(w1^2 - w2^2 + w3^2 - w4^2))/Iz_sym;
+% Define the inputs
+syms w1 w2 w3 w4
 
+% Define the equations of motion
+tk1Sym = xdot;
+tk2Sym = ydot;
+tk3Sym = zdot;
 
-% Substitute the constant
-    tk1 = (subs(tk1_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    tk2 = (subs(tk2_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    tk3 = (subs(tk3_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    td1 = (subs(td1_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    td2 = (subs(td2_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    td3 = (subs(td3_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    rk1 = (subs(rk1_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    rk2 = (subs(rk2_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    rk3 = (subs(rk3_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    rd1 = (subs(rd1_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    rd2 = (subs(rd2_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
-    rd3 = (subs(rd3_sym, [Ix_sym; Iy_sym; Iz_sym; Ax; Ay; Az; kdx; kdy; kdz; xdot_w; ydot_w; zdot_w; l; kf; km; ka; m_sym; g], constants));
+td1Sym = ((kfModel*(w1^2 + w2^2 + w3^2 + w4^2))*(sin(phi(t))*sin(psy(t))+cos(phi(t))*sin(theta(t))*cos(psy(t))) - (kaModel*AxModel*((xdotWModel-xdot)^2)))/mModel;
+td2Sym = ((kfModel*(w1^2 + w2^2 + w3^2 + w4^2))*(-sin(phi(t))*cos(psy(t))+sin(psy(t))*sin(theta(t))*cos(phi(t)))  - (kaModel*AyModel*((ydotWModel-ydot)^2)))/mModel;
+td3Sym = (-mModel*gModel + (kfModel*(w1^2 + w2^2 + w3^2 + w4^2))*(cos(phi(t))*cos(theta(t)))  - (kaModel*AzModel*((zdotWModel-zdot)^2)))/mModel;
+
+rk1Sym = p + q*sin(phi(t))*tan(theta(t)) + r*cos(phi(t))*tan(theta(t));
+rk2Sym = q*cos(phi(t)) - r*sin(phi(t));
+rk3Sym = q*sin(phi(t))*sec(theta(t)) + r*cos(phi(t))*sec(theta(t));
+
+rd1Sym = (-((IzModel-IyModel)*q*r)  - kdxModel*p + lModel*kfModel*(-w1^2 - w2^2 + w3^2 + w4^2))/IxModel;
+rd2Sym = (-((IxModel-IzModel)*p*r)  - kdyModel*q + lModel*kfModel*(-w1^2 + w2^2 + w3^2 - w4^2))/IyModel;
+rd3Sym = (-((IyModel-IxModel)*p*q) - kdzModel*r + kmModel*(w1^2 - w2^2 + w3^2 - w4^2))/IzModel;
 
 % Define the state, control input, and output vectors
-    state = [x(t); y(t); z(t); xdot; ydot; zdot; phi(t); theta(t); psy(t); p(t); q(t); r(t)];
-    state = subsStateVars(state, t);
-    
-    f = [tk1; tk2; tk3; td1; td2; td3; rk1; rk2; rk3; rd1; rd2; rd3];
-    f = subsStateVars(f,t);
-    
-    control = [w1; w2; w3; w4];
+state = [x(t); y(t); z(t); xdot; ydot; zdot; phi(t); theta(t); psy(t); p(t); q(t); r(t)];
+state = subsStateVars(state, t);
+
+f = [tk1Sym; tk2Sym; tk3Sym; td1Sym; td2Sym; td3Sym; rk1Sym; rk2Sym; rk3Sym; rd1Sym; rd2Sym; rd3Sym];
+f = subsStateVars(f,t);
+
+control = [w1; w2; w3; w4];
 
 % Determine the jacobians
-    A = jacobian(f,state);
-    B = jacobian(f,control);
+A = jacobian(f,state);
+B = jacobian(f,control);
 
-% Create the matlab functions
-    % Create QuadrotorStateFcn.m with current state and control vectors as inputs and the state time-derivative as outputs
-    matlabFunction(f,"File","QuadrotorStateFcn", "Vars",{state,control});
-    
-    % Create QuadrotorStateJacobianFcn.m with current state and control vectors as inputs and the Jacobians of the state time-derivative as outputs
-    matlabFunction(A,B,"File","QuadrotorStateJacobianFcn", "Vars",{state,control});
+% Create QuadrotorStateFcn.m with current state and control vectors as inputs and the state time-derivative as outputs
+matlabFunction(f,"File", 'QuadrotorStateFcn', "Vars",{state,control});
+
+% Create QuadrotorStateJacobianFcn.m with current state and control vectors as inputs and the Jacobians of the state time-derivative as outputs
+matlabFunction(A,B,"File",'QuadrotorStateJacobianFcn', "Vars",{state,control});
 
 
-%% Helper Functions
+%% Helper Functions [FROM MATHWORKS]
 function stateExpr = subsStateVars(timeExpr,var)
     if nargin == 1 
         var = sym("t");
