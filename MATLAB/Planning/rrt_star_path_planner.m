@@ -5,7 +5,7 @@ function [plannerWaypoints] = rrt_star_path_planner(map, waypointsList, plannerC
     rng(100, "twister");
 
     % Augment waypoints with orientation (0 degrees of roll, pitch and yaw)
-    waypointsList = [waypointsList repmat([1 0 0 0], size(waypointsList, 1), 1)];
+    waypointsList = [waypointsList repmat([1 0 0 0], size(waypointsList, 1), 1)];    
     
     % Define the state space object 
     ss = stateSpaceSE3(stateSpaceLimits);
@@ -17,6 +17,18 @@ function [plannerWaypoints] = rrt_star_path_planner(map, waypointsList, plannerC
     % Define a state validator object
     sv = validatorOccupancyMap3D(ss,Map=map);
     sv.ValidationDistance = 0.1;
+
+    % Verify is the input waypoints are valid (not in collision with
+    % obstacles)
+    waypointsValidity = isStateValid(sv,waypointsList);
+    valid = all(waypointsValidity);
+    if valid == 0
+        invalid_waypoints_error_msg = "The input waypoints are invalid!";
+        disp("The following indices of input waypoints are in collision:")
+        invalid_waypoints_idx = find(waypointsValidity == 0);
+        disp(invalid_waypoints_idx)
+        error(invalid_waypoints_error_msg)
+    end
 
     % Set up the RRT* Path Planner
     planner = plannerRRTStar(ss,sv);
