@@ -20,10 +20,10 @@ desired_enforcement = [];                   % Specifies whether the velocity bet
 statespace_limits = [-10   400;             % X-Limits
                      -10   400;             % Y-Limits
                      -10   100;             % Z-Limits
-                     inf inf;               % @gokul
-                     inf inf;               % @gokul
-                     inf inf;               % @gokul
-                     inf inf];              % @gokul
+                     inf inf;               % qw quaternion bounds
+                     inf inf;               % qx quaternion bounds
+                     inf inf;               % qy quaternion bounds
+                     inf inf];              % qz quaternion bounds
 excess_wind = 3;                            % Excess wind speed
 steady_wind = 7;                            % Steady-state wind magnitude
 wind_direction = pi()/4;                    % Steady-state wind direction
