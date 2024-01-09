@@ -31,5 +31,6 @@ The following are the low-level planners experimented with:
 Non-Linear MPC is used as the choice of controller to perform trajectory-tracking. Linear as well as Non-Linear MPC were implemented and their performance were analysed.
 
 The following graphics shows the trajectory tracking and disturbance rejection (wind, discrete mass drop) capabilities of both the Linear and Non-Linear MPC controllers.
+
 <img src="Submissions\Submission2\Checkpoint2\DeliveryMission.gif"/>
 
